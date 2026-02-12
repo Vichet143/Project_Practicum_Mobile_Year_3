@@ -1,13 +1,12 @@
 module.exports = function (api) {
   api.cache(true);
-
   return {
     presets: [
-      'babel-preset-expo',        // Expo preset
-      'nativewind/babel',         // NativeWind support
+      "babel-preset-expo",
+      "nativewind/babel"
     ],
     plugins: [
-      'react-native-reanimated/plugin', // MUST be last for Reanimated 3+
+      "react-native-reanimated/plugin",
     ],
   };
 };

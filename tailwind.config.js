@@ -8,7 +8,19 @@ module.exports = {
   ],
   presets: [require("nativewind/preset")],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        inputlogin: "#E9EAEB",
+        tabbar: "#FF6347",
+      },
+      fontFamily: {
+        light: ["Quicksand-Light"],
+        regular: ["Quicksand-Regular"],
+        medium: ["Quicksand-Medium"],
+        semibold: ["Quicksand-SemiBold"],
+        bold: ["Quicksand-Bold"],
+      },
+    },
   },
   plugins: [],
 }

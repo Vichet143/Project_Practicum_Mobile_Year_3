@@ -5,3 +5,10 @@
 .bgButtontabbar{
   background-color: #FF6347;
 }
+.bginputlogin{
+  background-color: #E9EAEB;
+}
+
+body {
+  font-family: Quicksand-Regular;
+}

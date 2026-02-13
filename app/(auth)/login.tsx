@@ -2,138 +2,283 @@ import {
   View,
   Text,
   TextInput,
+  TouchableOpacity,
+  Alert,
   Image,
   Pressable,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
 } from "react-native";
-import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import { useAuthStore } from "@/store/authStore";
+import { firebaseConfig } from "../../firebaseConfig";
+import Checkbox from "@/components/checkboxlogin";
+import { router } from "expo-router";
+
+const OTP_LENGTH = 6;
 
 export default function Login() {
-  const [isFocused, setIsFocused] = useState(false);
-  const [passWord, setPassword] = useState("");
-  const [email, setemail] = useState("");
-  const [showPassword, setshowPassword] = useState(false);
+  const recaptchaVerifier = useRef<any>(null);
+  const inputs = useRef<(TextInput | null)[]>([]);
 
-  const {user, isLoading, login, token } = useAuthStore();
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"PHONE" | "OTP">("PHONE");
+  const [isChecked, setIsChecked] = useState(false);
+  const [OTP, setOTP] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [timeLeft, setTimeLeft] = useState(15);
 
-  const handleLogin =async () => {
-    const result = await login(email, passWord);
+  useEffect(() => {
+    if (timeLeft === 0) return;
 
-    if (result.success) {
-          Alert.alert("Success", result.message);
-          // router.replace("/login"); // or go to main page if logged in
-        } else {
-          Alert.alert("Error", result.message || "Login failed. Try again.");
-        }
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  useEffect(() => {
+    if (step === "OTP") {
+      setTimeLeft(15);
+    }
+  }, [step]);
+
+  const { sendOTP, verifyOTP, user, token } = useAuthStore();
+
+  // ✅ Auto focus first OTP box
+  useEffect(() => {
+    if (step === "OTP") {
+      setTimeout(() => inputs.current[0]?.focus(), 100);
+    }
+  }, [step]);
+
+  // ✅ Format Cambodian phone
+  const formatPhoneNumber = (phone: string) => {
+    phone = phone.replace(/\s+/g, "").replace(/-/g, "");
+
+    if (phone.startsWith("+")) return phone;
+    if (phone.startsWith("0")) return "+855" + phone.slice(1);
+
+    return "+855" + phone;
   };
   console.log(user);
   console.log(token);
-  
+
+  const handleResendOTP = async () => {
+    const formattedPhone = formatPhoneNumber(phone);
+
+    setTimeLeft(15); // 🔥 restart timer
+    setOTP(Array(OTP_LENGTH).fill("")); // clear UI boxes
+    setOtp("");
+
+    inputs.current[0]?.focus(); // focus first box again
+
+    const res = await sendOTP(formattedPhone, recaptchaVerifier.current);
+
+    if (!res.success) {
+      Alert.alert("Error", res.message);
+    }
+  };
+
+  // ✅ Send OTP
+  const handleSendOTP = async () => {
+    if (!phone) {
+      Alert.alert("Warning", "Please fill the phone number");
+      return;
+    }
+
+    const formattedPhone = formatPhoneNumber(phone);
+    const res = await sendOTP(formattedPhone, recaptchaVerifier.current);
+
+    if (res.success) setStep("OTP");
+    else Alert.alert("Error", res.message);
+  };
+
+  // ✅ Handle OTP change
+  const handleChange = (text: string, index: number) => {
+    if (!/^[0-9]?$/.test(text)) return;
+
+    const newOtp = [...OTP];
+    newOtp[index] = text;
+    setOTP(newOtp);
+
+    if (text && index < OTP_LENGTH - 1) {
+      inputs.current[index + 1]?.focus();
+    }
+
+    const combined = newOtp.join("");
+    setOtp(combined);
+  };
+
+  // ✅ Verify OTP
+  const handleVerifyOTP = async () => {
+    if (otp.length !== OTP_LENGTH) {
+      Alert.alert("Warning", "Please enter full OTP");
+      return;
+    }
+
+    const res = await verifyOTP(otp);
+
+    if (res.success) {
+      Alert.alert("Success", "Login successful");
+      router.push("/(tabs)")
+    } else {
+      Alert.alert("Error", res.message);
+    }
+  };
+
   return (
-    <SafeAreaView
-      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-    >
-      <Text
-        className="text-center font-bold text-3xl mb-11"
-        style={{ color: "#FF6347" }}
-      >
-        Login
-      </Text>
+    <SafeAreaView className="flex-1 items-center justify-center">
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={firebaseConfig}
+      />
 
-      <View className="w-[90%] h-[21rem]">
-        <Text className="justify-start w-[90%] text-lg my-2">Email</Text>
-        <View className="w-full relative ">
-          <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setemail}
-          />
-          <Ionicons
-            name="mail-outline"
-            size={26}
-            color="#FF6A55"
-            className="absolute rounded-lg top-3 left-4"
-          />
-        </View>
+      {/* ================= PHONE STEP ================= */}
+      {step === "PHONE" && (
+        <>
+          <Text className="text-3xl font-bold mb-10 text-[#FF6347]">Login</Text>
 
-        <Text className="justify-start w-[90%] text-lg my-2">Password</Text>
-        <View className="w-full relative">
-          <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg tracking-widest ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder="Enter your password"
-            keyboardType="number-pad"
-            value={passWord}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <Ionicons
-            name="lock-closed-outline"
-            size={26}
-            color="#FF6A55"
-            className="absolute rounded-lg top-3 left-4"
-          />
-          <TouchableOpacity
-            onPress={() => setshowPassword(!showPassword)}
-            className="absolute right-4 top-3"
-          >
+          <View className="w-[90%] h-[21rem]">
+            <TextInput
+              className="border-gray-300 bg-inputlogin border h-[3.5rem] text-lg rounded-lg px-16"
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+            />
+
             <Ionicons
-              name={showPassword ? "eye-outline" : "eye-off-outline"}
+              name="phone-portrait-outline"
               size={26}
               color="#FF6A55"
+              className="absolute top-3 left-4"
             />
+
+            <View className="items-center mt-10">
+              <Checkbox
+                checked={isChecked}
+                label="Remember me"
+                onPress={() => setIsChecked(!isChecked)}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSendOTP}
+            className="mt-6 w-[90%] h-[3rem] bg-[#FF6A55] rounded-xl items-center justify-center"
+          >
+            <Text className="text-white text-xl font-bold">Login</Text>
           </TouchableOpacity>
+
+          <View className="flex-row items-center my-4 w-[90%]">
+            <View className="flex-1 border-t border-gray-300" />
+            <Text className="mx-3 text-gray-500">Or sign in with</Text>
+            <View className="flex-1 border-t border-gray-300" />
+          </View>
+
+          <View className="flex-row gap-2">
+            <View className="w-[3rem] h-[3rem] border items-center justify-center rounded-3xl border-inputlogin">
+              <Image source={require("../../assets/images/google.png")} />
+            </View>
+            <View className="w-[3rem] h-[3rem] border items-center justify-center rounded-3xl border-inputlogin">
+              <Image source={require("../../assets/images/facebook.png")} />
+            </View>
+          </View>
+
+          <View className="flex-row gap-1 mt-4">
+            <Text className="text-gray-500">Don't have an account?</Text>
+            <Pressable onPress={() => router.push("/register")}>
+              <Text className="text-[#FF6347] text-base font-medium">
+                Sign Up
+              </Text>
+            </Pressable>
+          </View>
+        </>
+      )}
+
+      {/* ================= OTP STEP ================= */}
+      {step === "OTP" && (
+        <View className="w-full items-center flex-1 justify-between px-6 py-10">
+          {/* TOP */}
+          <View className="w-full items-center">
+            <Text className="text-3xl font-bold text-[#FF6347] mb-6">
+              Verification
+            </Text>
+
+            <Text className="text-gray-500 text-center mb-8">
+              Code has been sent to {formatPhoneNumber(phone)}
+            </Text>
+
+            {/* OTP BOXES */}
+            <View className="flex-row justify-between w-full px-6 mb-6">
+              {OTP.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  value={digit}
+                  ref={(ref) => {
+                    inputs.current[index] = ref;
+                  }}
+                  className="w-14 h-14 bg-gray-100 rounded-xl text-center text-xl font-bold"
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  onChangeText={(text) => handleChange(text, index)}
+                  onKeyPress={({ nativeEvent }) => {
+                    if (
+                      nativeEvent.key === "Backspace" &&
+                      !OTP[index] &&
+                      index > 0
+                    ) {
+                      inputs.current[index - 1]?.focus();
+                    }
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* RESEND */}
+            <Text className="text-gray-400 mb-2 mt-4">
+              Didn’t receive code?
+            </Text>
+
+            <Text className="text-gray-500">
+              00:{timeLeft.toString().padStart(2, "0")}
+            </Text>
+
+            <Pressable disabled={timeLeft !== 0} onPress={handleResendOTP}>
+              <Text
+                className={`mt-2 font-semibold ${
+                  timeLeft === 0 ? "text-[#FF6347]" : "text-gray-300"
+                }`}
+              >
+                Resend Code
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* VERIFY BUTTON */}
+          <View className="w-full">
+            <TouchableOpacity
+              onPress={handleVerifyOTP}
+              className="w-full h-14 bg-[#FF6347] rounded-full items-center justify-center"
+            >
+              <Text className="text-white text-lg font-bold">Verify</Text>
+            </TouchableOpacity>
+
+            {/* BACK */}
+            <Pressable onPress={() => setStep("PHONE")}>
+              <View className="items-center">
+                <Text className="text-gray-500 mt-4">
+                  Back to{" "}
+                  <Text className="text-[#FF6347] font-semibold">Sign In</Text>
+                </Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
-      </View>
-
-      <TouchableOpacity
-        onPress={handleLogin}
-        className="h-[3rem] mt-14 w-[90%] bg-[#FF6A55] rounded-xl items-center justify-center"
-      >
-        <Text className="text-white text-xl font-semibold">Login</Text>
-      </TouchableOpacity>
-
-      <View className="flex-row items-center my-4 w-[90%]">
-        <View className="flex-1 border-t border-gray-300" />
-        <Text className="mx-3 text-gray-500">Or sign in with</Text>
-        <View className="flex-1 border-t border-gray-300" />
-      </View>
-
-      <View className="flex-row gap-2">
-        <View className="w-[3rem] h-[3rem] border items-center justify-center rounded-3xl border-inputlogin">
-          <Image source={require("../../assets/images/google.png")} />
-        </View>
-        <View className="w-[3rem] h-[3rem] border items-center justify-center rounded-3xl border-inputlogin">
-          <Image source={require("../../assets/images/facebook.png")} />
-        </View>
-      </View>
-
-      <View className="flex-row gap-1">
-        <Text className="text-gray-500">Dont you have an account?</Text>
-        <Pressable onPress={() => router.push("/register")}>
-          <Text className="text-[#FF6347] text-base font-medium">Sign Up</Text>
-        </Pressable>
-      </View>
-
-      {/* <Button
-        title="Go to Register"
-        onPress={() => router.push("/(auth)/register")}
-      /> */}
+      )}
     </SafeAreaView>
   );
 }

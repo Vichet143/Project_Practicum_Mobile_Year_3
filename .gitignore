@@ -4,6 +4,8 @@
 # dependencies
 node_modules/
 
+firebaseConfig
+
 # Expo
 .expo/
 dist/
@@ -42,3 +44,5 @@ app-example
 # generated native folders
 /ios
 /android
+
+

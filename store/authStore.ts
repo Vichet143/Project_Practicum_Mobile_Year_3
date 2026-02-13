@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import { auth } from "../firebaseConfig";
+
+const API_KEY = process.env.EXPO_PUBLIC_API_URL;
+
+/* ================= TYPES ================= */
 
 interface User {
   id: string;
@@ -8,15 +14,8 @@ interface User {
   phone_number: string;
 }
 
-interface RegisterResult {
-  success?: boolean;
-  message?: string;
-  user?: User;
-  token?: string;
-}
-
-interface LoginResult {
-  success?: boolean;
+interface AuthResult {
+  success: boolean;
   message?: string;
   user?: User;
   token?: string;
@@ -27,94 +26,123 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   error: string | null;
+  verificationId: string | null;
 
   register: (
     fullname: string,
     phone_number: string,
     email: string,
     password: string,
-  ) => Promise<RegisterResult>;
+  ) => Promise<AuthResult>;
 
-  login: (email: string, password: string) => Promise<LoginResult>;
+  sendOTP: (phone: string, recaptcha: any) => Promise<AuthResult>;
+  verifyOTP: (code: string) => Promise<AuthResult>;
 
-  logout: () => void;
+  logout: () => Promise<void>;
 }
+/* ================= STORE ================= */
 
-const API_KEY = process.env.EXPO_PUBLIC_API_URL;
-
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
   isLoading: false,
   error: null,
-  
+  verificationId: null,
+
+  /* -------- REGISTER -------- */
   register: async (fullname, phone_number, email, password) => {
     try {
       set({ isLoading: true, error: null });
 
-      const response = await fetch(`${API_KEY}/auth/register`, {
+      const res = await fetch(`${API_KEY}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullname, phone_number, email, password }),
+        body: JSON.stringify({
+          fullname,
+          phone_number,
+          email,
+          password,
+        }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        return {
-          success: false,
-          message: data.message || "Registration failed",
-        };
+      if (!res.ok) {
+        set({ isLoading: false });
+        return { success: false, message: data.message };
       }
 
-      set({ user: data.user, token: data.token, isLoading: false });
-
-      return { success: true, user: data.user, token: data.token };
-    } catch (error: any) {
-      set({ error: error.message || "Something went wrong", isLoading: false });
-      return {
-        success: false,
-        message: error.message || "Something went wrong",
-      };
+      set({ isLoading: false });
+      return { success: true, user: data.user };
+    } catch (err: any) {
+      set({ isLoading: false, error: err.message });
+      return { success: false, message: err.message };
     }
   },
 
-  login: async (email, password) => {
+  /* -------- SEND OTP -------- */
+  
+  sendOTP: async (phone, recaptcha) => {
     try {
       set({ isLoading: true, error: null });
 
-      const response = await fetch(`${API_KEY}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(phone, recaptcha);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { success: false, message: data.message || "Login failed" };
-      }
-
-      set({ user: data.user, token: data.token, isLoading: false });
-
-      await AsyncStorage.setItem("token", data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(data.user));
-
-      return {
-        success: true,
-        user: data.user,
-        token: data.token,
-        message: "Login successful",
-      };
-    } catch (error: any) {
-      set({ error: error.message || "Something went wrong", isLoading: false });
-      return {
-        success: false,
-        message: error.message || "Something went wrong",
-      };
+      set({ verificationId, isLoading: false });
+      return { success: true };
+    } catch (err: any) {
+      set({ isLoading: false, error: err.message });
+      return { success: false, message: err.message };
     }
   },
 
+  /* -------- VERIFY OTP -------- */
+  verifyOTP: async (code) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const { verificationId } = get();
+      if (!verificationId) {
+        throw new Error("OTP not requested");
+      }
+
+      const credential = PhoneAuthProvider.credential(verificationId, code);
+
+      const userCred = await signInWithCredential(auth, credential);
+      const token = await userCred.user.getIdToken();
+
+      // 🔐 Send token to backend
+      const res = await fetch(`${API_KEY}/auth/login`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+
+      set({
+        user: data.user,
+        token,
+        isLoading: false,
+      });
+
+      return { success: true, user: data.user, token };
+    } catch (err: any) {
+      set({ isLoading: false, error: err.message });
+      return { success: false, message: err.message };
+    }
+  },
+
+  /* -------- LOGOUT -------- */
   logout: async () => {
     set({ user: null, token: null });
     await AsyncStorage.removeItem("token");

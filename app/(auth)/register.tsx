@@ -38,9 +38,7 @@ export default function Register() {
         <Text className="justify-start w-[90%] text-lg my-2">Full Name</Text>
         <View className="w-full relative ">
           <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
+            className="border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg border-gray-300"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter your full name"
@@ -58,9 +56,7 @@ export default function Register() {
         <Text className="justify-start w-[90%] text-lg my-2">Phone</Text>
         <View className="w-full relative ">
           <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
+            className="border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg border-gray-300"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter your phone number"
@@ -78,9 +74,7 @@ export default function Register() {
         <Text className="justify-start w-[90%] text-lg my-2">Email</Text>
         <View className="w-full relative ">
           <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
+            className="border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg border-gray-300"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter your email"
@@ -99,9 +93,7 @@ export default function Register() {
         <Text className="justify-start w-[90%] text-lg my-2">Password</Text>
         <View className="w-full relative">
           <TextInput
-            className={`border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg tracking-widest ${
-              isFocused ? "border-gray-300" : "border-inputlogin"
-            }`}
+            className="border h-[3.5rem] rounded-lg bg-inputlogin ps-16 text-lg border-gray-300"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter your password"
@@ -138,7 +130,7 @@ export default function Register() {
 
       <View className="flex-row items-center my-4 w-[90%]">
         <View className="flex-1 border-t border-gray-300" />
-        <Text className="mx-3 text-gray-500">Or sign in with</Text>
+        <Text className="mx-3 text-gray-500">Or sign up with</Text>
         <View className="flex-1 border-t border-gray-300" />
       </View>
 

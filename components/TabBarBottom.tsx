@@ -30,7 +30,7 @@ export default function TabBarBottom({
   useEffect(() => {
     scale.value = withSpring(
       typeof isFocused === "boolean" ? (isFocused ? 1 : 0) : isFocused,
-      { duration: 350 },
+      { duration: 100 },
     );
   }, [scale, isFocused]);
 
@@ -72,13 +72,16 @@ export default function TabBarBottom({
             style={{
               width: 24,
               height: 24,
-              tintColor: isFocused ? "#fff" : "#222",
+              tintColor: isFocused ? "#fff" : "#BABDC1",
             }}
           />
         )}
       </Animated.View>
       <Animated.Text
-        style={[{ color: isFocused ? "#FF6347" : "#222", paddingBottom: 10}, animatedTextStyle]}
+        style={[
+          { color: isFocused ? "#FF6347" : "#222", paddingBottom: 10 },
+          animatedTextStyle,
+        ]}
         className="text-center mt-1 font-bold"
       >
         {label}

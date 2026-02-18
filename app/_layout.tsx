@@ -1,13 +1,16 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "../global.css";
 
+import { useAuthStore } from "../store/authStore"; // ✅ adjust path
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { token, _hasHydrated } = useAuthStore();
+
   const [fontsLoaded, error] = useFonts({
     "Quicksand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
     "Quicksand-Light": require("../assets/fonts/Quicksand-Light.ttf"),
@@ -16,37 +19,23 @@ export default function RootLayout() {
     "Quicksand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
   });
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-
+  /* 🔥 Hide splash when everything ready */
   useEffect(() => {
-    if (error) {
-      throw error;
-    }
-
-    if (fontsLoaded) {
+    if (fontsLoaded && _hasHydrated) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, error]);
+  }, [fontsLoaded, _hasHydrated]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoggedIn(false); // temp auth logic
-    }, 500);
+  if (error) throw error;
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!fontsLoaded || isLoggedIn === null) {
+  /* ⛔ Wait for Zustand restore + fonts */
+  if (!fontsLoaded || !_hasHydrated) {
     return null;
   }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {!isLoggedIn ? (
-        <Stack.Screen name="(auth)" />
-      ) : (
-        <Stack.Screen name="(tabs)" />
-      )}
+      {!token ? <Stack.Screen name="(auth)" /> : <Stack.Screen name="(tabs)" />}
     </Stack>
   );
 }

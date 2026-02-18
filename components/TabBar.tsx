@@ -10,8 +10,8 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     index: (props: any) => (
       <Image source={require("../assets/images/tabbar/Home.png")} {...props} />
     ),
-    tracking: (props: any) => (
-      <Image source={require("../assets/images/tabbar/Group.png")} {...props} />
+    history: (props: any) => (
+      <Image source={require("../assets/images/tabbar/history.png")} {...props} />
     ),
     createdelivery: (props: any) => (
       <Image source={require("../assets/images/tabbar/create.png")} {...props} />
@@ -52,10 +52,10 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           style={[animatedStyle,{
             position: 'absolute',
             borderRadius: 30,
-            marginHorizontal: 13.5,
-            marginVertical: -10,
-            height: dimensions.height - 10,
-            width: buttonWidth - 27,
+            marginHorizontal: 19,
+            marginVertical: -12,
+            height: dimensions.height - 5,
+            width: buttonWidth - 40,
             backgroundColor: '#FF6347',
             marginBottom: 40
           }]}

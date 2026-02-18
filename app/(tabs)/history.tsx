@@ -4,7 +4,7 @@ import React from 'react'
 export default function tracking() {
   return (
     <View>
-      <Text>tracking</Text>
+      <Text>history</Text>
     </View>
   )
 }

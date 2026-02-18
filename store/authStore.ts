@@ -1,9 +1,14 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import {
+  PhoneAuthProvider,
+  signInWithCredential,
+  signOut,
+} from "firebase/auth";
 import { auth } from "../firebaseConfig";
 
-const API_KEY = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 /* ================= TYPES ================= */
 
@@ -12,140 +17,177 @@ interface User {
   fullname: string;
   email: string;
   phone_number: string;
-}
-
-interface AuthResult {
-  success: boolean;
-  message?: string;
-  user?: User;
-  token?: string;
+  photoURL: string
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
+  verificationId: string | null;
+
   isLoading: boolean;
   error: string | null;
-  verificationId: string | null;
+
+  _hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
 
   register: (
     fullname: string,
-    phone_number: string,
+    phone: string,
     email: string,
     password: string,
-  ) => Promise<AuthResult>;
+  ) => Promise<{ success: boolean; message?: string }>;
 
-  sendOTP: (phone: string, recaptcha: any) => Promise<AuthResult>;
-  verifyOTP: (code: string) => Promise<AuthResult>;
+  sendOTP: (
+    phone: string,
+    recaptcha: any,
+  ) => Promise<{ success: boolean; message?: string }>;
+
+  verifyOTP: (code: string) => Promise<{ success: boolean; message?: string }>;
 
   logout: () => Promise<void>;
 }
+
 /* ================= STORE ================= */
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  token: null,
-  isLoading: false,
-  error: null,
-  verificationId: null,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      token: null,
+      verificationId: null,
 
-  /* -------- REGISTER -------- */
-  register: async (fullname, phone_number, email, password) => {
-    try {
-      set({ isLoading: true, error: null });
+      isLoading: false,
+      error: null,
 
-      const res = await fetch(`${API_KEY}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullname,
-          phone_number,
-          email,
-          password,
-        }),
-      });
+      _hasHydrated: false,
+      setHasHydrated: (value: boolean) => set({ _hasHydrated: value }),
 
-      const data = await res.json();
+      /* -------- REGISTER -------- */
+      register: async (fullname, phone_number, email, password) => {
+        try {
+          set({ isLoading: true, error: null });
 
-      if (!res.ok) {
-        set({ isLoading: false });
-        return { success: false, message: data.message };
-      }
+          const res = await fetch(`${API_URL}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fullname,
+              phone_number,
+              email,
+              password,
+            }),
+          });
 
-      set({ isLoading: false });
-      return { success: true, user: data.user };
-    } catch (err: any) {
-      set({ isLoading: false, error: err.message });
-      return { success: false, message: err.message };
-    }
-  },
+          const data = await res.json();
 
-  /* -------- SEND OTP -------- */
-  
-  sendOTP: async (phone, recaptcha) => {
-    try {
-      set({ isLoading: true, error: null });
+          set({ isLoading: false });
 
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(phone, recaptcha);
+          if (!res.ok) {
+            return { success: false, message: data.message };
+          }
 
-      set({ verificationId, isLoading: false });
-      return { success: true };
-    } catch (err: any) {
-      set({ isLoading: false, error: err.message });
-      return { success: false, message: err.message };
-    }
-  },
+          return { success: true };
+        } catch (err: any) {
+          set({ isLoading: false, error: err.message });
+          return { success: false, message: err.message };
+        }
+      },
 
-  /* -------- VERIFY OTP -------- */
-  verifyOTP: async (code) => {
-    try {
-      set({ isLoading: true, error: null });
+      /* -------- SEND OTP -------- */
+      sendOTP: async (phone, recaptcha) => {
+        try {
+          set({ isLoading: true, error: null });
 
-      const { verificationId } = get();
-      if (!verificationId) {
-        throw new Error("OTP not requested");
-      }
+          const provider = new PhoneAuthProvider(auth);
 
-      const credential = PhoneAuthProvider.credential(verificationId, code);
+          const verificationId = await provider.verifyPhoneNumber(
+            phone,
+            recaptcha,
+          );
 
-      const userCred = await signInWithCredential(auth, credential);
-      const token = await userCred.user.getIdToken();
+          set({
+            verificationId,
+            isLoading: false,
+          });
 
-      // 🔐 Send token to backend
-      const res = await fetch(`${API_KEY}/auth/login`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+          return { success: true };
+        } catch (err: any) {
+          set({ isLoading: false, error: err.message });
+          return { success: false, message: err.message };
+        }
+      },
 
-      const data = await res.json();
+      /* -------- VERIFY OTP -------- */
+      verifyOTP: async (code) => {
+        try {
+          set({ isLoading: true, error: null });
 
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+          const { verificationId } = get();
 
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+          if (!verificationId) {
+            throw new Error("OTP not requested");
+          }
 
-      set({
-        user: data.user,
-        token,
-        isLoading: false,
-      });
+          // 🔐 Firebase credential
+          const credential = PhoneAuthProvider.credential(verificationId, code);
 
-      return { success: true, user: data.user, token };
-    } catch (err: any) {
-      set({ isLoading: false, error: err.message });
-      return { success: false, message: err.message };
-    }
-  },
+          const userCred = await signInWithCredential(auth, credential);
 
-  /* -------- LOGOUT -------- */
-  logout: async () => {
-    set({ user: null, token: null });
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("user");
-  },
-}));
+          // 🔐 Firebase ID token
+          const firebaseToken = await userCred.user.getIdToken();
+
+          // 🔐 Send token to backend
+          const res = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${firebaseToken}`,
+            },
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.message || "Login failed");
+          }
+
+          set({
+            user: data.user,
+            token: firebaseToken,
+            isLoading: false,
+          });
+
+          return { success: true };
+        } catch (err: any) {
+          set({ isLoading: false, error: err.message });
+          return { success: false, message: err.message };
+        }
+      },
+
+      /* -------- LOGOUT -------- */
+      logout: async () => {
+        await signOut(auth);
+
+        set({
+          user: null,
+          token: null,
+          verificationId: null,
+        });
+      },
+    }),
+    {
+      name: "auth-storage",
+
+      storage: createJSONStorage(() => AsyncStorage),
+
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+      }),
+
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    },
+  ),
+);

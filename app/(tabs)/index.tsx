@@ -1,5 +1,4 @@
 import MakeCarousel from "@/components/Carousel";
-import HeaderTop from "@/components/headertop";
 import { useAuthStore } from "@/store/authStore";
 import { View, Text, Image, Pressable, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,8 +27,8 @@ export default function Index() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <HeaderTop />
-      <View className="px-[1rem] pt-[2rem] flex-row">
+      
+      <View className="px-[1rem] pt-[1rem] flex-row">
         <View>
           <View className="">
             <Image
@@ -98,7 +97,7 @@ export default function Index() {
             >
               <Text className="text-center font-bold">Tracking Delivery</Text>
               <View className="flex-1"></View>
-              <View className="flex-row justify-between">
+              <View className="flex-row justify-between items-end">
                 <View>
                   <Image
                     source={require("../../assets/images/carouselimage/fast_forward.png")}

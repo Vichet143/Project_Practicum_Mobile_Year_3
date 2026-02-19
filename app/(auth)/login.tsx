@@ -145,7 +145,7 @@ export default function Login() {
             <TextInput
               className="border-gray-300 bg-inputlogin border h-[3.5rem] text-lg rounded-lg px-16"
               placeholder="Enter your phone number"
-              keyboardType="phone-pad"
+              keyboardType="default"
               value={phone}
               onChangeText={setPhone}
             />
@@ -222,7 +222,7 @@ export default function Login() {
                     inputs.current[index] = ref;
                   }}
                   className="w-14 h-14 bg-gray-100 rounded-xl text-center text-xl font-bold"
-                  keyboardType="number-pad"
+                  keyboardType="default"
                   maxLength={1}
                   onChangeText={(text) => handleChange(text, index)}
                   onKeyPress={({ nativeEvent }) => {

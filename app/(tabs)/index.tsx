@@ -26,9 +26,9 @@ export default function Index() {
     };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       
-      <View className="px-[1rem] pt-[1rem] flex-row">
+      <View className="px-[1rem] pt-[2rem] flex-row">
         <View>
           <View className="">
             <Image
@@ -114,6 +114,6 @@ export default function Index() {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

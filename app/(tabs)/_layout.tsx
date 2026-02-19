@@ -9,6 +9,8 @@ const TabLayout = () => {
       // Custom header for all tabs
       screenOptions={{
         header: (props) => <Header {...props} />,
+        headerShown: true,
+        headerStyle: { backgroundColor: "#FF6347" }
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />

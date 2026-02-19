@@ -1,12 +1,14 @@
 import { Tabs } from "expo-router"
 import { TabBar } from "../../components/TabBar";
+import Header from "../../components/headertop";
 
 const TabLayout = () => {
   return (
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
+      // Custom header for all tabs
       screenOptions={{
-        headerShown: false,
+        header: (props) => <Header {...props} />,
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />

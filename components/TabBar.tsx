@@ -2,7 +2,7 @@ import { View, Image, LayoutChangeEvent} from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TabBarBottom from "./TabBarBottom";
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -35,6 +35,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   };
 
   const tabPositionX = useSharedValue(0);
+   useEffect(() => {
+     tabPositionX.value = buttonWidth * state.index;
+   }, [buttonWidth, state.index]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -103,30 +106,6 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               label={label}
               icons={img}
             />
-
-            // <TouchableOpacity
-            //   key={route.name}
-            //   accessibilityRole="button"
-            //   accessibilityState={isFocused ? { selected: true } : {}}
-            //   accessibilityLabel={options.tabBarAccessibilityLabel}
-            //   onPress={onPress}
-            //   onLongPress={onLongPress}
-            //   style={{ flex: 1 }}
-            // >
-            //   <View className="w-full items-center">
-            //     {img[route.name]({
-            //         style: {
-            //           tintColor: isFocused ? "#673ab7" : "#222",
-            //         },
-            //       })}
-            //   </View>
-            //   <Text
-            //     style={{ color: isFocused ? "#673ab7" : "#222" }}
-            //     className=" text-center"
-            //   >
-            //     {label}
-            //   </Text>
-            // </TouchableOpacity>
           );
         })}
       </View>

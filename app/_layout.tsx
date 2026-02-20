@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import "../global.css";
 
-import { useAuthStore } from "../store/authStore"; // ✅ adjust path
+import { useAuthStore } from "../store/authStore"; 
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,7 +19,6 @@ export default function RootLayout() {
     "Quicksand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
   });
 
-  /* 🔥 Hide splash when everything ready */
   useEffect(() => {
     if (fontsLoaded && _hasHydrated) {
       SplashScreen.hideAsync();
@@ -27,8 +26,6 @@ export default function RootLayout() {
   }, [fontsLoaded, _hasHydrated]);
 
   if (error) throw error;
-
-  /* ⛔ Wait for Zustand restore + fonts */
   if (!fontsLoaded || !_hasHydrated) {
     return null;
   }

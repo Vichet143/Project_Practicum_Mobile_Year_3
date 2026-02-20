@@ -7,13 +7,12 @@ import { Stack } from "expo-router";
 
 export default function Createdelivery() {
   return (
-    <SafeAreaView>
+    <View className="flex-1">
       <Stack.Screen options={{ title: "Create Delivery" }} />
-      <View>
-        <Text>Createdelivery</Text>
+      <View className="mt-[2rem] px-[1rem] flex-1">
+        <Create />
       </View>
-      <Create />
-    </SafeAreaView>
+    </View>
   );
 }
 

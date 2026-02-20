@@ -48,6 +48,7 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
+
 /* ================= STORE ================= */
 
 export const useAuthStore = create<AuthState>()(
@@ -190,4 +191,5 @@ export const useAuthStore = create<AuthState>()(
       },
     },
   ),
+  
 );

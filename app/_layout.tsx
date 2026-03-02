@@ -1,10 +1,10 @@
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import "../global.css";
 
-import { useAuthStore } from "../store/authStore"; 
+import { useAuthStore } from "../store/authStore";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,14 +19,18 @@ export default function RootLayout() {
     "Quicksand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
   });
 
+  const appReady = _hasHydrated && (fontsLoaded || !!error);
+
   useEffect(() => {
-    if (fontsLoaded && _hasHydrated) {
+    if (appReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, _hasHydrated]);
+    if (error) {
+      console.error("Font load error, continuing with fallback fonts:", error);
+    }
+  }, [appReady, error]);
 
-  if (error) throw error;
-  if (!fontsLoaded || !_hasHydrated) {
+  if (!appReady) {
     return null;
   }
 

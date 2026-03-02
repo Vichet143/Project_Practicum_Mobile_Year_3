@@ -1,7 +1,6 @@
 import { create } from "zustand";
-import * as SecureStore from "expo-secure-store";
-import { useAuthStore } from "./authStore";
 import { auth } from "../firebaseConfig";
+import { useAuthStore } from "./authStore";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -21,6 +20,7 @@ interface Delivery {
   packageName: string;
   packageNote: string;
   packageSize: string;
+  price: number;
   status: string;
   createdAt: any;
   updatedAt: any;
@@ -41,7 +41,8 @@ interface DeliveryStore {
   loading: boolean;
   error: string | null;
 
-  createDelivery: (payload: CreateDeliveryPayload) => Promise<boolean>;
+  // Returns delivery_id string on success, null on failure
+  createDelivery: (payload: CreateDeliveryPayload) => Promise<string | null>;
   getDeliveryHistory: () => Promise<void>;
   getDeliveryById: (delivery_id: string) => Promise<Delivery | null>;
   updateDeliveryStatus: (
@@ -54,9 +55,9 @@ interface DeliveryStore {
 const getToken = async () => {
   const currentUser = auth.currentUser;
   if (currentUser) {
-    return await currentUser.getIdToken(); 
+    return await currentUser.getIdToken();
   }
-  return useAuthStore.getState().token; 
+  return useAuthStore.getState().token;
 };
 
 export const useDeliveryStore = create<DeliveryStore>((set) => ({
@@ -69,10 +70,8 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
     try {
       const token = await getToken();
 
-      console.log("=== DEBUG ===");
-      console.log("Token:", token);
-      console.log("API_URL:", API_URL);
-      console.log("Payload:", JSON.stringify(payload));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${API_URL}/deliveries/create`, {
         method: "POST",
@@ -81,18 +80,40 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
-      console.log("Status:", res.status);
-      console.log("Response:", JSON.stringify(data));
+      clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error(data.message);
-      return true;
+      const contentType = res.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await res.json()
+        : await res.text();
+
+      if (!res.ok) {
+        const message =
+          typeof data === "object" && data?.message
+            ? data.message
+            : `Failed to create delivery (${res.status})`;
+        throw new Error(message);
+      }
+
+      // Return the delivery_id from the response
+      const deliveryId =
+        (typeof data === "object" ? data.delivery_id : null) ??
+        (typeof data === "object" ? data.delivery?.delivery_id : null) ??
+        (typeof data === "object" ? data.data?.delivery_id : null) ??
+        (typeof data === "object" ? data.id : null) ??
+        null;
+
+      return deliveryId;
     } catch (err: any) {
-      console.log("Catch Error:", err.message);
-      set({ error: err.message });
-      return false;
+      const message =
+        err?.name === "AbortError"
+          ? "Request timeout. Please check your internet/backend and try again."
+          : err?.message || "Failed to create delivery";
+      set({ error: message });
+      return null;
     } finally {
       set({ loading: false });
     }

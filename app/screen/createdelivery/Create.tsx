@@ -1,16 +1,16 @@
+import LocationPicker from "@/components/LocationPicker";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import LocationPicker from "@/components/LocationPicker";
 import { useDeliveryStore } from "../../../store/createDelivery";
-import { useRouter } from "expo-router";
 
 interface LocationData {
   address: string;
@@ -27,7 +27,13 @@ export default function Create() {
     "small",
   );
 
-  const { createDelivery, loading } = useDeliveryStore();
+  const PACKAGE_SIZE_PRICES: Record<string, number> = {
+    small: 0.25,
+    medium: 0.26,
+    large: 0.27,
+  };
+
+  const { createDelivery, loading, error } = useDeliveryStore();
   const router = useRouter();
 
   const [recipientName, setRecipientName] = useState("");
@@ -40,7 +46,7 @@ export default function Create() {
     if (!dropoff) return Alert.alert("Please select a dropoff location");
     if (!packageName) return Alert.alert("Please enter package name");
 
-    const success = await createDelivery({
+    const deliveryId = await createDelivery({
       recipientName,
       recipientPhone,
       pickup,
@@ -50,12 +56,23 @@ export default function Create() {
       packageSize,
     });
 
-    if (success) {
-      Alert.alert("Success", "Delivery created!", [
-        { text: "OK", onPress: () => router.push("/(tabs)/history") },
-      ]);
+    if (deliveryId) {
+      // Get the price based on package size
+      const price = PACKAGE_SIZE_PRICES[packageSize];
+
+      // Navigate to payment screen with delivery_id and amount
+      router.push({
+        pathname: "/screen/payment/Payment",
+        params: {
+          delivery_id: deliveryId,
+          amount: price.toString(),
+        },
+      });
     } else {
-      Alert.alert("Error", "Failed to create delivery. Please try again.");
+      Alert.alert(
+        "Error",
+        error || "Failed to create delivery. Please try again.",
+      );
     }
   };
 
@@ -65,7 +82,6 @@ export default function Create() {
       contentContainerStyle={{ paddingBottom: 40 }}
       keyboardShouldPersistTaps="handled"
     >
-
       <Text className="text-base font-bold text-[#333] mb-2.5 mt-1.5">
         Recipient Info
       </Text>
@@ -234,6 +250,16 @@ export default function Create() {
             <Ionicons name="location" size={16} color="#FF6347" />
             <Text className="flex-1 text-[13px] text-[#555]" numberOfLines={1}>
               {dropoff.address}
+            </Text>
+          </View>
+          {/* inside the Summary View, after the dropoff row */}
+          <View className="flex-row items-center gap-2 mt-1.5 pt-2 border-t border-[#f0f0f0]">
+            <Ionicons name="pricetag-outline" size={16} color="#FF6347" />
+            <Text className="flex-1 text-[13px] font-semibold text-[#333]">
+              Estimated Price:{" "}
+              <Text className="text-[#FF6347]">
+                ${PACKAGE_SIZE_PRICES[packageSize].toFixed(2)}
+              </Text>
             </Text>
           </View>
         </View>

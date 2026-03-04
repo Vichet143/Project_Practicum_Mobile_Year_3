@@ -1,11 +1,11 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   PhoneAuthProvider,
   signInWithCredential,
   signOut,
 } from "firebase/auth";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { auth } from "../firebaseConfig";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -17,7 +17,7 @@ interface User {
   fullname: string;
   email: string;
   phone_number: string;
-  photoURL: string
+  photoURL: string;
 }
 
 interface AuthState {
@@ -45,9 +45,10 @@ interface AuthState {
 
   verifyOTP: (code: string) => Promise<{ success: boolean; message?: string }>;
 
+  getValidToken: (forceRefresh?: boolean) => Promise<string | null>;
+
   logout: () => Promise<void>;
 }
-
 
 /* ================= STORE ================= */
 
@@ -165,6 +166,27 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      getValidToken: async (forceRefresh = false) => {
+        try {
+          const currentUser = auth.currentUser;
+
+          if (!currentUser) {
+            return get().token;
+          }
+
+          const freshToken = await currentUser.getIdToken(forceRefresh);
+
+          if (freshToken && freshToken !== get().token) {
+            set({ token: freshToken });
+          }
+
+          return freshToken;
+        } catch (err: any) {
+          set({ error: err?.message || "Failed to refresh token" });
+          return get().token;
+        }
+      },
+
       /* -------- LOGOUT -------- */
       logout: async () => {
         await signOut(auth);
@@ -191,5 +213,4 @@ export const useAuthStore = create<AuthState>()(
       },
     },
   ),
-  
 );

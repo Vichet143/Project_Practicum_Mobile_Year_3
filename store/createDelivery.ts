@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { auth } from "../firebaseConfig";
 import { useAuthStore } from "./authStore";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -53,11 +52,7 @@ interface DeliveryStore {
 }
 
 const getToken = async () => {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    return await currentUser.getIdToken();
-  }
-  return useAuthStore.getState().token;
+  return await useAuthStore.getState().getValidToken();
 };
 
 export const useDeliveryStore = create<DeliveryStore>((set) => ({

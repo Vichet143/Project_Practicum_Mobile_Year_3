@@ -28,7 +28,7 @@ export default function Payment() {
   const delivery_id = params.delivery_id as string;
   const amount = parseFloat(params.amount as string);
 
-  const { user, token } = useAuthStore();
+  const { user, getValidToken } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function Payment() {
 
   // Initialize payment on mount
   useEffect(() => {
-    if (!delivery_id || !amount || !user || !token) {
+    if (!delivery_id || !amount || !user) {
       setError("Missing required payment information");
       setLoading(false);
       return;
@@ -97,6 +97,11 @@ export default function Payment() {
       setLoading(true);
       setError(null);
 
+      const token = await getValidToken();
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
       const result = await createPayment(
         {
           delivery_id,
@@ -105,7 +110,7 @@ export default function Payment() {
           currency: "USD",
           description: `Payment for delivery ${delivery_id}`,
         },
-        token!,
+        token,
       );
 
       if (!result.success || !result.data) {
@@ -131,16 +136,16 @@ export default function Payment() {
     // Poll every 3 seconds
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const result = await verifyPayment(paymentId, token!);
+        const token = await getValidToken();
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+        const result = await verifyPayment(paymentId, token);
         console.log("Polling result:", result);
         console.log(paymentId);
         console.log(token);
         console.log(result.success);
         console.log(result.data);
-        
-        
-        
-        
 
         if (result.success && result.data) {
           const newStatus = result.data.status;
@@ -179,6 +184,7 @@ export default function Payment() {
           text: "Yes",
           style: "destructive",
           onPress: async () => {
+            const token = await getValidToken();
             if (paymentId && token) {
               await cancelPayment(paymentId, token);
             }

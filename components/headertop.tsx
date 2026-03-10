@@ -11,6 +11,7 @@ export default function Header({ route, navigation }: any) {
   const getHeaderInfo = () => {
     switch (route.name) {
       case "index":
+      case "home":
         return { title: "SmartMove", showLogo: true, showBack: false };
       case "history":
         return { title: "History", showLogo: false, showBack: true };
@@ -18,6 +19,10 @@ export default function Header({ route, navigation }: any) {
         return { title: "Chat", showLogo: false, showBack: true };
       case "profile":
         return { title: "Profile", showLogo: false, showBack: true };
+      case "tracking":
+        return { title: "Tracking", showLogo: false, showBack: false };
+      case "search":
+        return { title: "Search", showLogo: false, showBack: false };
       default:
         return { title: route.name, showLogo: false, showBack: true };
     }
@@ -43,7 +48,7 @@ export default function Header({ route, navigation }: any) {
         </View>
 
         {/* Notification bell on home only */}
-        {route.name === "index" && (
+        {(route.name === "index" || route.name === "home") && (
           <TouchableOpacity className="bg-white p-2 rounded-full">
             <Ionicons name="notifications-outline" size={22} color="#FF6347" />
           </TouchableOpacity>

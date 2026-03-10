@@ -1,20 +1,20 @@
+import Checkbox from "@/components/checkboxlogin";
+import { useAuthStore } from "@/store/authStore";
+import { Ionicons } from "@expo/vector-icons";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   Alert,
   Image,
   Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useRef, useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
-import { useAuthStore } from "@/store/authStore";
 import { firebaseConfig } from "../../firebaseConfig";
-import Checkbox from "@/components/checkboxlogin";
-import { router } from "expo-router";
 
 const OTP_LENGTH = 6;
 
@@ -123,7 +123,13 @@ export default function Login() {
 
     if (res.success) {
       Alert.alert("Success", "Login successful");
-      router.push("/(tabs)")
+      const role = useAuthStore.getState().user?.role?.toLowerCase?.();
+
+      if (role === "transporter") {
+        router.replace("/navigation/transporter");
+      } else {
+        router.replace("/navigation/user");
+      }
     } else {
       Alert.alert("Error", res.message);
     }

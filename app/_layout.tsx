@@ -2,6 +2,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import "../global.css";
 
 import { useAuthStore } from "../store/authStore";
@@ -9,7 +10,7 @@ import { useAuthStore } from "../store/authStore";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { token, _hasHydrated } = useAuthStore();
+  const { _hasHydrated } = useAuthStore();
 
   const [fontsLoaded, error] = useFonts({
     "Quicksand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
@@ -19,7 +20,7 @@ export default function RootLayout() {
     "Quicksand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
   });
 
-  const appReady = _hasHydrated && (fontsLoaded || !!error);
+  const appReady = fontsLoaded || !!error;
 
   useEffect(() => {
     if (appReady) {
@@ -31,12 +32,20 @@ export default function RootLayout() {
   }, [appReady, error]);
 
   if (!appReady) {
-    return null;
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#FF6347" />
+      </View>
+    );
   }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {!token ? <Stack.Screen name="(auth)" /> : <Stack.Screen name="(tabs)" />}
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="navigation/user" />
+      <Stack.Screen name="navigation/transporter" />
     </Stack>
   );
 }

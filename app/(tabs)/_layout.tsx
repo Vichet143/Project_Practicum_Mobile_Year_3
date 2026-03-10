@@ -1,24 +1,15 @@
-import { Tabs } from "expo-router"
-import { TabBar } from "../../components/TabBar";
-import Header from "../../components/headertop";
+import { useAuthStore } from "@/store/authStore";
+import React from "react";
+import TabLayouttransporter from "../navigation/transporter/_layout";
+import TabLayoutuser from "../navigation/user/_layout";
 
-const TabLayout = () => {
-  return (
-    <Tabs
-      tabBar={(props) => <TabBar {...props} />}
-      // Custom header for all tabs
-      screenOptions={{
-        header: (props) => <Header {...props} />,
-        headerShown: true,
-        headerStyle: { backgroundColor: "#FF6347" }
-      }}
-    >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="history" options={{ title: "History" }} />
-      <Tabs.Screen name="chat" options={{ title: "Chat" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
-    </Tabs>
-  );
+export default function TabsLayout() {
+  const { user } = useAuthStore();
+  const role = user?.role?.toLowerCase?.() || "user";
+
+  if (role === "transporter") {
+    return <TabLayouttransporter />;
+  }
+
+  return <TabLayoutuser />;
 }
-
-export default TabLayout;

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import History from "../screen/historyscreen";
+import History from "../../screen/historyscreen";
 
 export default function history() {
   return (

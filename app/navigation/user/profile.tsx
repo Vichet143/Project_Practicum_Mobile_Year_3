@@ -1,8 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import React from "react";
-import Profile from "../screen/profile";
-import { SafeAreaView } from "react-native-safe-area-context";
-
+import Profile from "../../screen/profile";
 
 export default function profile() {
   return (

@@ -1,26 +1,59 @@
-import { View, Image, LayoutChangeEvent} from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useEffect, useState } from "react";
+import { Image, LayoutChangeEvent, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TabBarBottom from "./TabBarBottom";
-import { useState ,useEffect} from "react";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+type TabBarProps = BottomTabBarProps & {
+  accentColor?: string;
+  role?: "user" | "transporter";
+};
+
+export function TabBar({
+  state,
+  descriptors,
+  navigation,
+  accentColor = "#FF6347",
+  role = "user",
+}: TabBarProps) {
   const img: any = {
     index: (props: any) => (
       <Image source={require("../assets/images/tabbar/Home.png")} {...props} />
     ),
     history: (props: any) => (
-      <Image source={require("../assets/images/tabbar/history.png")} {...props} />
+      <Image
+        source={require("../assets/images/tabbar/history.png")}
+        {...props}
+      />
     ),
     createdelivery: (props: any) => (
-      <Image source={require("../assets/images/tabbar/create.png")} {...props} />
+      <Image
+        source={require("../assets/images/tabbar/create.png")}
+        {...props}
+      />
     ),
     chat: (props: any) => (
       <Image source={require("../assets/images/tabbar/chat.png")} {...props} />
     ),
     profile: (props: any) => (
-      <Image source={require("../assets/images/tabbar/profile.png")} {...props} />
+      <Image
+        source={require("../assets/images/tabbar/profile.png")}
+        {...props}
+      />
+    ),
+    tracking: (props: any) => (
+      <Image source={require("../assets/images/tabbar/map.png")} {...props} />
+    ),
+    search: (props: any) => (
+      <Image
+        source={require("../assets/images/tabbar/search.png")}
+        {...props}
+      />
     ),
   };
 
@@ -30,38 +63,68 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const onTabbarLayot = (e: LayoutChangeEvent) => {
     setDimensions({
       height: e.nativeEvent.layout.height,
-      width: e.nativeEvent.layout.width
+      width: e.nativeEvent.layout.width,
     });
   };
 
   const tabPositionX = useSharedValue(0);
-   useEffect(() => {
-     tabPositionX.value = buttonWidth * state.index;
-   }, [buttonWidth, state.index]);
+  useEffect(() => {
+    tabPositionX.value = buttonWidth * state.index;
+  }, [buttonWidth, state.index]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: tabPositionX.value }]
-    }
-  })
+      transform: [{ translateX: tabPositionX.value }],
+    };
+  });
 
   return (
-    <SafeAreaView className="items-center flex w-full">
+    <SafeAreaView style={{ alignItems: "center", width: "100%" }}>
       <View
         onLayout={onTabbarLayot}
-        className="absolute bottom-12 flex-row shadow-xl bg-white justify-between items-center py-2 w-[90%] rounded-[1rem] h-[4rem]"
+        style={{
+          position: "absolute",
+          bottom: 48,
+          flexDirection: "row",
+          backgroundColor: role === "transporter" ? "#FFFFFF" : "#FFFFFF",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingVertical: role === "transporter" ? 8 : 8,
+          width: "90%",
+          borderRadius: role === "transporter" ? 20 : 24,
+          height: role === "transporter" ? 70 : 70,
+          shadowOpacity: role === "transporter" ? 0.4 : 0.3,
+          shadowRadius: 20,
+          elevation: 15,
+          borderWidth: 1,
+          borderColor:
+            role === "transporter"
+              ? "rgba(255, 107, 55, 0.1)"
+              : "rgba(0, 0, 0, 0.05)",
+        }}
       >
         <Animated.View
-          style={[animatedStyle,{
-            position: 'absolute',
-            borderRadius: 30,
-            marginHorizontal: 19,
-            marginVertical: -12,
-            height: dimensions.height - 5,
-            width: buttonWidth - 40,
-            backgroundColor: '#FF6347',
-            marginBottom: 40
-          }]}
+          style={[
+            animatedStyle,
+            {
+              position: "absolute",
+              borderRadius: role === "transporter" ? 30 : 30,
+              marginHorizontal: role === "transporter" ? 9.7 : 18.6,
+              marginVertical: role === "transporter" ? -10 : -9,
+              height: dimensions.height - (role === "transporter" ? 15 : 17),
+              width: buttonWidth - (role === "transporter" ? 22 : 40),
+              backgroundColor: accentColor,
+              marginBottom: role === "transporter" ? 40 : 40,
+              shadowColor: accentColor,
+              shadowOffset: {
+                width: 0,
+                height: role === "transporter" ? 8 : 6,
+              },
+              shadowOpacity: role === "transporter" ? 0.6 : 0.5,
+              shadowRadius: role === "transporter" ? 15 : 12,
+              elevation: role === "transporter" ? 12 : 10,
+            },
+          ]}
         />
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];

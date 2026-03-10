@@ -194,8 +194,8 @@ export default function Payment() {
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
             }
-            // Navigate back to home after canceling
-            router.replace("/(tabs)");
+            // Navigate back to user home after canceling
+            router.replace("/navigation/user");
           },
         },
       ],
@@ -207,8 +207,8 @@ export default function Payment() {
   };
 
   const handleContinue = () => {
-    // Navigate to history tab after successful payment
-    router.replace("/(tabs)/history");
+    // Navigate to user history after successful payment
+    router.replace("/navigation/user/history");
   };
 
   const formatTime = (seconds: number): string => {

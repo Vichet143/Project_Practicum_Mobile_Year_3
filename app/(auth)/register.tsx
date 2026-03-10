@@ -1,9 +1,17 @@
-import { View,Alert, Text, Button,Image,TouchableOpacity,TextInput,ActivityIndicator,Pressable } from "react-native";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Alert,
+  Image,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function Register() {
   const [isFocused, setIsFocused] = useState(false);
@@ -13,7 +21,7 @@ export default function Register() {
   const [numberPhone, setNumberphone] = useState("");
   const [fullName, setFullname] = useState("");
 
-  const { isLoading, register} = useAuthStore()
+  const { isLoading, register } = useAuthStore();
 
   const handleSignup = async () => {
     const result = await register(fullName, numberPhone, email, passWord);
@@ -26,11 +34,8 @@ export default function Register() {
     }
   };
 
-
   return (
-    <SafeAreaView
-      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-    >
+    <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Text className="text-[#FF6347] font-bold text-3xl mb-12">
         Registration
       </Text>

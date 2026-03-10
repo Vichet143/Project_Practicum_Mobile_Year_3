@@ -18,6 +18,7 @@ interface User {
   email: string;
   phone_number: string;
   photoURL: string;
+  role?: string;
 }
 
 interface AuthState {

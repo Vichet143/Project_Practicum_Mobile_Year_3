@@ -1,49 +1,49 @@
 import MakeCarousel from "@/components/Carousel";
 import { useAuthStore } from "@/store/authStore";
-import { View, Text, Image, Pressable, Animated } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useRef } from "react";
 import { router } from "expo-router";
+import React, { useRef } from "react";
+import { Animated, Image, Pressable, Text, View } from "react-native";
 
 export default function Index() {
   const { user } = useAuthStore();
-    const scale1 = useRef(new Animated.Value(1)).current;
-    const scale2 = useRef(new Animated.Value(1)).current;
+  const displayName =
+    user?.fullname || "No name";
+  const scale1 = useRef(new Animated.Value(1)).current;
+  const scale2 = useRef(new Animated.Value(1)).current;
 
-    const animateIn = (scale: Animated.Value) => {
-      Animated.spring(scale, {
-        toValue: 0.94,
-        useNativeDriver: true,
-      }).start();
-    };
+  const animateIn = (scale: Animated.Value) => {
+    Animated.spring(scale, {
+      toValue: 0.94,
+      useNativeDriver: true,
+    }).start();
+  };
 
-    const animateOut = (scale: Animated.Value) => {
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 4,
-        useNativeDriver: true,
-      }).start();
-    };
+  const animateOut = (scale: Animated.Value) => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true,
+    }).start();
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      
       <View className="px-[1rem] pt-[2rem] flex-row">
         <View>
           <View className="">
             <Image
-              source={require("../../assets/images/headertop/profile.jpg")}
+              source={require("../../../assets/images/headertop/profile.jpg")}
               className="w-[4.5rem] h-[4.5rem] rounded-full border-[#FF6347] border-2"
               resizeMode="cover"
             />
           </View>
         </View>
         <View className=" h-[4.5rem] justify-center ps-[1rem]">
-          <Text className="text-lg font-bold">
-            Hello, {user?.fullname ?? "No name"}
-          </Text>
+          <Text className="text-lg font-bold">Hello, {displayName}</Text>
           <Pressable>
-            <Text className="text-sm text-gray-400">View account</Text>
+            <Text className="text-sm text-gray-400 capitalize">
+              View Account
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -71,11 +71,11 @@ export default function Index() {
 
               <View className="flex-row justify-between items-end">
                 <Image
-                  source={require("../../assets/images/carouselimage/fast_forward.png")}
+                  source={require("../../../assets/images/carouselimage/fast_forward.png")}
                 />
 
                 <Image
-                  source={require("../../assets/images/carouselimage/createdelivery 1.png")}
+                  source={require("../../../assets/images/carouselimage/createdelivery 1.png")}
                   className="w-[3rem] h-[3rem]"
                   resizeMode="contain"
                 />
@@ -100,12 +100,12 @@ export default function Index() {
               <View className="flex-row justify-between items-end">
                 <View>
                   <Image
-                    source={require("../../assets/images/carouselimage/fast_forward.png")}
+                    source={require("../../../assets/images/carouselimage/fast_forward.png")}
                   />
                 </View>
 
                 <Image
-                  source={require("../../assets/images/carouselimage/onboardingphoto 2.png")}
+                  source={require("../../../assets/images/carouselimage/onboardingphoto 2.png")}
                   className="w-[3rem] h-[3rem]"
                   resizeMode="contain"
                 />

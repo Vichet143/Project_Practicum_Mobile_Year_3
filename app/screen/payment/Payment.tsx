@@ -27,9 +27,18 @@ export default function Payment() {
   // Get delivery_id and amount from route params
   const delivery_id = params.delivery_id as string;
   const amount = parseFloat(params.amount as string);
+  console.log(delivery_id);
+  console.log(amount);
+  
+  
 
-  const { user, getValidToken } = useAuthStore();
+  const { user, getValidToken, _hasHydrated } = useAuthStore();
+  const userId = (user as any)?.id ?? (user as any)?.uid ?? null;
 
+  console.log(userId);
+  console.log(user);
+  
+  
   const [loading, setLoading] = useState(true);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -43,8 +52,13 @@ export default function Payment() {
 
   // Initialize payment on mount
   useEffect(() => {
-    if (!delivery_id || !amount || !user) {
+    if (!_hasHydrated) {
+      return;
+    }
+
+    if (!delivery_id || !amount || !userId) {
       setError("Missing required payment information");
+      setStatus("failed");
       setLoading(false);
       return;
     }
@@ -60,7 +74,7 @@ export default function Payment() {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, []);
+  }, [_hasHydrated, delivery_id, amount, userId]);
 
   // Start countdown timer
   useEffect(() => {
@@ -105,7 +119,7 @@ export default function Payment() {
       const result = await createPayment(
         {
           delivery_id,
-          user_id: user!.id,
+          user_id: userId,
           amount,
           currency: "USD",
           description: `Payment for delivery ${delivery_id}`,

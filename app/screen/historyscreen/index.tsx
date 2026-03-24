@@ -22,6 +22,7 @@ interface ContentItem {
   title: string;
   total: number;
   status: Status;
+  paymentStatus?: string;
 }
 
 const STATUS_OPTIONS: (Status | "All")[] = [
@@ -62,6 +63,7 @@ export default function History() {
       title: delivery.packageName,
       total: delivery.price,
       status: normalizeStatus(delivery.status),
+      paymentStatus: delivery.paymentStatus,
     }));
   }, [deliveries]);
 
@@ -154,41 +156,47 @@ export default function History() {
               )}
             </View>
           }
-          renderItem={({ item }) => (
-            <View className="w-full h-[5rem] mt-[1rem] px-[1rem] flex-row justify-between items-center bg-white border border-gray-400 rounded-lg">
-              <View className="flex-col">
-                <Text className="text-lg font-medium">{item.title}</Text>
-                <View className="flex-row items-center gap-4">
-                  <Text className="text-sm text-gray-500">
-                    Total: ${item.total.toFixed(2)}
-                  </Text>
-                  <View
-                    className={`px-2 py-1 rounded-full ${item.status === "Delivered" ? "bg-green-200" : item.status === "In Transit" ? "bg-yellow-200" : "bg-red-200"}`}
-                  >
-                    <Text
-                      className={`text-xs font-medium ${
-                        item.status === "Delivered"
-                          ? "text-green-800"
-                          : item.status === "In Transit"
-                            ? "text-yellow-800"
-                            : "text-red-800"
-                      }`}
-                    >
-                      {item.status}
+          renderItem={({ item }) => {
+            if ((item.paymentStatus || "").toLowerCase() === "unpaid") {
+              return null;
+            }
+
+            return (
+              <View className="w-full h-[5rem] mt-[1rem] px-[1rem] flex-row justify-between items-center bg-white border border-gray-400 rounded-lg">
+                <View className="flex-col">
+                  <Text className="text-lg font-medium">{item.title}</Text>
+                  <View className="flex-row items-center gap-4">
+                    <Text className="text-sm text-gray-500">
+                      Total: ${item.total.toFixed(2)}
                     </Text>
+                    <View
+                      className={`px-2 py-1 rounded-full ${item.status === "Delivered" ? "bg-green-200" : item.status === "In Transit" ? "bg-yellow-200" : "bg-red-200"}`}
+                    >
+                      <Text
+                        className={`text-xs font-medium ${
+                          item.status === "Delivered"
+                            ? "text-green-800"
+                            : item.status === "In Transit"
+                              ? "text-yellow-800"
+                              : "text-red-800"
+                        }`}
+                      >
+                        {item.status}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              {/* View Button */}
-              <TouchableOpacity
-                className="bg-[#FF6347] px-4 py-2 rounded-md"
-                onPress={() => router.push(`/screen/View?id=${item.id}`)}
-              >
-                <Text className="text-white font-medium">View</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+                {/* View Button */}
+                <TouchableOpacity
+                  className="bg-[#FF6347] px-4 py-2 rounded-md"
+                  onPress={() => router.push(`/screen/View?id=${item.id}`)}
+                >
+                  <Text className="text-white font-medium">View</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
         />
       </View>
     </View>

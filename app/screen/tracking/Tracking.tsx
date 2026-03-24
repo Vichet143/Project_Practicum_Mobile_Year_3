@@ -51,28 +51,32 @@ export default function Tracking() {
             )}
           </View>
         }
-        renderItem={({ item }) => (
-          <View className="w-full mt-3 p-4 bg-white border border-gray-200 rounded-lg flex-row items-center justify-between">
-            <View className="flex-1 pr-3">
-              <Text className="text-base font-semibold text-gray-900">
-                {item.packageName}
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                Status: {item.status}
-              </Text>
-              <Text className="text-sm text-gray-500">
-                To: {item.recipientName}
-              </Text>
-            </View>
+        renderItem={({ item }) =>
+          normalizeStatus(item.status) !== "cancelled" ? (
+            <View className="w-full mt-3 p-4 bg-white border border-gray-200 rounded-lg flex-row items-center justify-between">
+              <View className="flex-1 pr-3">
+                <Text className="text-base font-semibold text-gray-900">
+                  {item.packageName}
+                </Text>
+                <Text className="text-sm text-gray-500 mt-1">
+                  Status: {item.status}
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  To: {item.recipientName}
+                </Text>
+              </View>
 
-            <TouchableOpacity
-              className="bg-[#FF6347] px-4 py-2 rounded-md"
-              onPress={() => router.push(`/screen/View?id=${item.delivery_id}`)}
-            >
-              <Text className="text-white font-medium">View</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                className="bg-[#FF6347] px-4 py-2 rounded-md"
+                onPress={() =>
+                  router.push(`/screen/View?id=${item.delivery_id}`)
+                }
+              >
+                <Text className="text-white font-medium">View</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
       />
     </View>
   );

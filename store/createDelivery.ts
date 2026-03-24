@@ -23,6 +23,7 @@ interface Delivery {
   status: string;
   createdAt: any;
   updatedAt: any;
+  paymentStatus: string;
 }
 
 interface CreateDeliveryPayload {

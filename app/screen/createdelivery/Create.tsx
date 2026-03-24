@@ -68,6 +68,9 @@ export default function Create() {
           amount: price.toString(),
         },
       });
+      console.log(deliveryId);
+      console.log(price);
+      
     } else {
       Alert.alert(
         "Error",

@@ -1,12 +1,6 @@
 import React from "react";
-import { Text, View } from "react-native";
+import TransporterSearchScreen from "../../screen/transporterscreen/search";
 
-export default function TransporterSearch() {
-  return (
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-xl font-bold text-gray-900">
-        Transporter Search
-      </Text>
-    </View>
-  );
+export default function TransporterSearchTab() {
+  return <TransporterSearchScreen />;
 }

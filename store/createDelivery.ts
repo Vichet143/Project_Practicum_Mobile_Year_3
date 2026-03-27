@@ -24,6 +24,7 @@ interface Delivery {
   createdAt: any;
   updatedAt: any;
   paymentStatus: string;
+  transporterId?: string;
 }
 
 interface CreateDeliveryPayload {
@@ -38,6 +39,7 @@ interface CreateDeliveryPayload {
 
 interface DeliveryStore {
   deliveries: Delivery[];
+  availableDeliveries: Delivery[]; // Used ONLY for the "Find Job" search screen
   loading: boolean;
   error: string | null;
 
@@ -50,6 +52,10 @@ interface DeliveryStore {
     status: string,
   ) => Promise<boolean>;
   cancelDelivery: (delivery_id: string) => Promise<boolean>;
+
+  // --- 3. TRANSPORTER ACTIONS ---
+  getAvailableDeliveries: () => Promise<void>;
+  acceptDelivery: (delivery_id: string) => Promise<boolean>;
 }
 
 const getToken = async () => {
@@ -58,6 +64,7 @@ const getToken = async () => {
 
 export const useDeliveryStore = create<DeliveryStore>((set) => ({
   deliveries: [],
+  availableDeliveries: [],
   loading: false,
   error: null,
 
@@ -190,6 +197,64 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+
+      return true;
+    } catch (err: any) {
+      set({ error: err.message });
+      return false;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Fetch orders that need a driver
+  getAvailableDeliveries: async () => {
+    set({ loading: true, error: null });
+    try {
+      const token = await getToken();
+      // Assuming your backend has an endpoint for this. 
+      // If not, you'll need to create one!
+      const res = await fetch(`${API_URL}/deliveries/transporter/available`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      console.log("🔥 BACKEND RESPONSE:", data); // Look at your terminal!
+
+      if (!res.ok) throw new Error(data.message);
+
+      // Bulletproof way to extract the array, regardless of backend format
+      const extractedArray = Array.isArray(data) ? data : (data.deliveries || data.data || []);
+
+      set({ availableDeliveries: extractedArray });
+    } catch (err: any) {
+      set({ error: err.message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Driver accepts the order
+  acceptDelivery: async (delivery_id) => {
+    set({ loading: true, error: null });
+    try {
+      const token = await getToken();
+      // This endpoint needs to tie the logged-in transporter's ID to the delivery
+      const res = await fetch(`${API_URL}/deliveries/${delivery_id}/accept`, {
+        method: "POST", // or PATCH, depending on your backend
+        headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      // Instantly remove the accepted job from the available list so it disappears from UI
+      set((state) => ({
+        availableDeliveries: state.availableDeliveries.filter((d) => d.delivery_id !== delivery_id)
+      }));
 
       return true;
     } catch (err: any) {

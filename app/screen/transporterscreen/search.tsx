@@ -1,27 +1,88 @@
-import React from "react";
-import { FlatList, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, Text, View } from "react-native";
 import JobCard from "../../../components/transporter/JobCard";
+import { useDeliveryStore } from "../../../store/createDelivery";
 
-// Mock data to simulate the available delivery jobs
-const mockAvailableJobs = [
-  { id: "1", from: "Boeung Kak", to: "Toul Kork", weight: "5kg", price: 10 },
-  { id: "2", from: "Riverside", to: "BKK1", weight: "2kg", price: 5 },
-  { id: "3", from: "Sen Sok", to: "Russian Mkt", weight: "10kg", price: 15 },
-  { id: "4", from: "Daun Penh", to: "Chroy Changvar", weight: "1kg", price: 3 },
-  { id: "5", from: "BKK3", to: "Tuol Tompoung", weight: "8kg", price: 12 },
-  { id: "6", from: "Meanchey", to: "Pochentong", weight: "20kg", price: 25 },
-  { id: "7", from: "Boeung Kak", to: "Toul Kork", weight: "5kg", price: 10 },
-  { id: "8", from: "Riverside", to: "BKK1", weight: "2kg", price: 5 },
-  { id: "9", from: "Sen Sok", to: "Russian Mkt", weight: "10kg", price: 15 },
-  { id: "10", from: "Daun Penh", to: "Chroy Changvar", weight: "1kg", price: 3 },
-  { id: "11", from: "BKK3", to: "Tuol Tompoung", weight: "8kg", price: 12 },
-  { id: "12", from: "Meanchey", to: "Pochentong", weight: "20kg", price: 25 },
-];
+interface MappedDelivery {
+  delivery_id: string;
+  from: string;
+  to: string;
+  weight: string;
+  price: number;
+}
 
 export default function TransporterSearchScreen() {
-  const handleAcceptOrder = (id: string) => {
-    // Placeholder function for when the back-end is ready
-    console.log("Accepted job:", id);
+  const router = useRouter();
+  // const { deliveries, getAvailableDeliveries, acceptDelivery, loading } = useDeliveryStore();
+  const error = useDeliveryStore((state) => state.error);
+  const [acceptingOrderId, setAcceptingOrderId] = useState<string | null>(null);
+
+  const availableDeliveries = useDeliveryStore(
+    (state) => state.availableDeliveries,
+  );
+  const getAvailableDeliveries = useDeliveryStore(
+    (state) => state.getAvailableDeliveries,
+  );
+  const acceptDelivery = useDeliveryStore((state) => state.acceptDelivery);
+  const loading = useDeliveryStore((state) => state.loading);
+
+  // Fetch available deliveries on component mount
+  useEffect(() => {
+    getAvailableDeliveries();
+  }, []);
+
+  // Transform delivery data to match JobCard props
+  const mappedDeliveries: MappedDelivery[] = (availableDeliveries || []).map(
+    (delivery) => ({
+      delivery_id: delivery.delivery_id,
+      from: delivery.pickup?.address || "Unknown location",
+      to: delivery.dropoff?.address || "Unknown location",
+      weight: delivery.packageSize || "N/A",
+      price: delivery.price || 0,
+    }),
+  );
+
+  const handleAcceptOrder = async (delivery_id: string) => {
+    try {
+      setAcceptingOrderId(delivery_id);
+
+      // Call the accept delivery function from store
+      const success = await acceptDelivery(delivery_id);
+
+      if (success) {
+        // Show success alert
+        Alert.alert("Success", "Order accepted successfully!", [
+          {
+            text: "View Order",
+            onPress: () => {
+              // Refresh the available deliveries list
+              getAvailableDeliveries();
+              // Navigate to tracking screen
+              router.push("/navigation/transporter/tracking");
+            },
+          },
+          {
+            text: "Continue Searching",
+            onPress: () => {
+              // Refresh the available deliveries list to remove accepted order
+              getAvailableDeliveries();
+            },
+          },
+        ]);
+      } else {
+        // Show error alert
+        Alert.alert(
+          "Error",
+          "Failed to accept order. Please check your connection and try again.",
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      console.error("Accept order error:", error);
+    } finally {
+      setAcceptingOrderId(null);
+    }
   };
 
   return (
@@ -31,24 +92,50 @@ export default function TransporterSearchScreen() {
         <Text className="text-2xl font-bold text-black mb-3">Find Job</Text>
         <View className="h-[1px] bg-gray-400 w-full" />
       </View>
-
-      {/* 2-Column Grid of Job Cards */}
-      <FlatList
-        data={mockAvailableJobs}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        renderItem={({ item }) => (
-          <JobCard
-            from={item.from}
-            to={item.to}
-            weight={item.weight}
-            price={item.price}
-            onAccept={() => handleAcceptOrder(item.id)}
-          />
-        )}
-      />
+      {/* Error state */}
+      {error ? (
+        <View className="flex-1 justify-center items-center px-4">
+          <Text className="text-red-500 text-lg font-bold text-center mb-2">
+            Oops!
+          </Text>
+          <Text className="text-gray-600 text-center">{error}</Text>
+        </View>
+      ) : loading && availableDeliveries.length === 0 ? (
+        /* Loading state */
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#FF6347" />
+          <Text className="mt-4 text-gray-600">Loading available jobs...</Text>
+        </View>
+      ) : mappedDeliveries.length === 0 ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-lg text-gray-600">
+            No jobs available at the moment
+          </Text>
+          <Text className="text-sm text-gray-500 mt-2">
+            Check back later for new delivery opportunities
+          </Text>
+        </View>
+      ) : (
+        /* 2-Column Grid of Job Cards */
+        <FlatList
+          data={mappedDeliveries}
+          keyExtractor={(item) => item.delivery_id}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          renderItem={({ item }) => (
+            <JobCard
+              delivery_id={item.delivery_id}
+              from={item.from}
+              to={item.to}
+              weight={item.weight}
+              price={item.price}
+              isLoading={acceptingOrderId === item.delivery_id}
+              onAccept={() => handleAcceptOrder(item.delivery_id)}
+            />
+          )}
+        />
+      )}
     </View>
   );
 }

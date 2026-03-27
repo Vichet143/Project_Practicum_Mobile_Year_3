@@ -3,13 +3,14 @@ import { View, Text, TouchableOpacity } from 'react-native';
 
 // Define the shape of the data for this component
 interface TrackingListItemProps {
+  delivery_id?: string;
   location: string;
   price: string;
-  status: 'pending' | 'completed';
+  status: string;
   onPressView?: () => void;
 }
 
-export default function TrackingListItem({ location, price, status, onPressView }: TrackingListItemProps) {
+export default function TrackingListItem({ delivery_id, location, price, status, onPressView }: TrackingListItemProps) {
   const statusColor = status === 'completed' ? 'text-green-500' : 'text-orange-400';
   const statusLabel = status === 'completed' ? 'Completed' : 'Pending';
   return (

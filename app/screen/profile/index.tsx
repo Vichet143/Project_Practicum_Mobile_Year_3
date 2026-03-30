@@ -32,7 +32,7 @@ export default function Profile() {
         {user?.photoURL ? (
           <Image
             source={{ uri: user.photoURL }}
-            className="w-20 h-20 rounded-full mb-3"
+            className="w-20 h-20 rounded-full mb-3 border border-gray-200"
           />
         ) : (
           <View className="w-20 h-20 rounded-full bg-[#FF6347] items-center justify-center mb-3">
@@ -52,22 +52,22 @@ export default function Profile() {
         <MenuItem
           icon="person-outline"
           label="Edit Profile"
-          onPress={() => {}}
+          onPress={() => router.push("/screen/profile/edit-profile" as any)}
         />
         <MenuItem
           icon="notifications-outline"
           label="Notifications"
-          onPress={() => {}}
+          onPress={() => router.push("/screen/profile/notifications" as any)}
         />
         <MenuItem
           icon="lock-closed-outline"
           label="Change Password"
-          onPress={() => {}}
+          onPress={() => router.push("/screen/profile/change-password" as any)}
         />
         <MenuItem
           icon="help-circle-outline"
           label="Help & Support"
-          onPress={() => {}}
+          onPress={() => router.push("/screen/profile/support" as any)}
         />
       </View>
 

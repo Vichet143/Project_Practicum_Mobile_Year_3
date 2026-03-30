@@ -40,6 +40,8 @@ interface CreateDeliveryPayload {
 interface DeliveryStore {
   deliveries: Delivery[];
   availableDeliveries: Delivery[]; // Used ONLY for the "Find Job" search screen
+  activeJobs: Delivery[];
+  completedJobs: Delivery[];
   loading: boolean;
   error: string | null;
 
@@ -56,6 +58,8 @@ interface DeliveryStore {
   // --- 3. TRANSPORTER ACTIONS ---
   getAvailableDeliveries: () => Promise<void>;
   acceptDelivery: (delivery_id: string) => Promise<boolean>;
+  getTransporterActiveJobs: () => Promise<void>;
+  getTransporterHistory: () => Promise<void>;
 }
 
 const getToken = async () => {
@@ -65,6 +69,8 @@ const getToken = async () => {
 export const useDeliveryStore = create<DeliveryStore>((set) => ({
   deliveries: [],
   availableDeliveries: [],
+  activeJobs: [],
+  completedJobs: [],
   loading: false,
   error: null,
 
@@ -260,6 +266,41 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
     } catch (err: any) {
       set({ error: err.message });
       return false;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  getTransporterActiveJobs: async () => {
+    set({ loading: true, error: null });
+    try {
+      const token = await getToken();
+      // This endpoint should return jobs where transporterId matches the logged-in user
+      const res = await fetch(`${API_URL}/deliveries/transporter/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      // We store these separately from "availableDeliveries"
+      set({ activeJobs: data.deliveries || [] });
+    } catch (err: any) {
+      set({ error: err.message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  getTransporterHistory: async () => {
+    set({ loading: true });
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/deliveries/transporter/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      set({ completedJobs: data.deliveries || [] });
     } finally {
       set({ loading: false });
     }

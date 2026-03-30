@@ -10,18 +10,26 @@ interface TrackingListItemProps {
   onPressView?: () => void;
 }
 
-export default function TrackingListItem({ delivery_id, location, price, status, onPressView }: TrackingListItemProps) {
+export default function TrackingListItem({ 
+  delivery_id, 
+  location, 
+  price, 
+  status, 
+  onPressView 
+}: TrackingListItemProps) {
+  
   const statusColor = status === 'completed' ? 'text-green-500' : 'text-orange-400';
   const statusLabel = status === 'completed' ? 'Completed' : 'Pending';
+  
   return (
     <View className="flex-row justify-between items-center bg-white p-4 rounded-xl mb-3 border border-gray-100 shadow-sm">
       <View className="flex-1">
-        <Text className="text-gray-800 text-sm font-semibold mb-1" numberOfLines={1}>
+        <Text className="text-gray-800 text-md font-semibold mb-1" numberOfLines={1}>
           {location}
         </Text>
         <View className="flex-row items-center">
-          <Text className="text-black font-bold text-sm mr-2">{price}</Text>
-          <Text className={`text-xs font-medium ${statusColor}`}>{statusLabel}</Text>
+          <Text className="text-black font-bold text-md mr-3">{price}</Text>
+          <Text className={`text-sm font-medium ${statusColor}`}>{statusLabel}</Text>
         </View>
       </View>
       
@@ -30,7 +38,7 @@ export default function TrackingListItem({ delivery_id, location, price, status,
         activeOpacity={0.7}
         className="bg-[#FF6B52] px-6 py-2 rounded-full"
       >
-        <Text className="text-white font-bold text-xs">View</Text>
+        <Text className="text-white font-bold text-md">View</Text>
       </TouchableOpacity>
     </View>
   );

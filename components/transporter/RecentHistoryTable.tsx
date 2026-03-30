@@ -1,25 +1,38 @@
 import React from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 
-const mockData = [
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-  { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
-];
+// const mockData = [
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+//   { id: "1", route: "Boeung Kak, Phnom Penh", amount: "10$" },
+// ];
 
-export default function RecentHistoryTable() {
-  const renderItem = ({ item }: { item: any }) => (
+interface RecentHistoryItem {
+  delivery_id?: string;
+  route: string;
+  amount: string;
+  onPressView?: () => void;
+}
+
+export default function RecentHistoryTable({
+  delivery_id,
+  route,
+  amount,
+  onPressView,
+}: RecentHistoryItem) {
+
+  const renderItem = ({ item }: { item: RecentHistoryItem }) => (
     <View className="flex-row items-center justify-between py-4 border-b border-gray-200 px-4">
-      <Text className="w-[10%] text-sm text-gray-800">{item.id}</Text>
+      <Text className="w-[10%] text-sm text-gray-800">{item.delivery_id}</Text>
       <Text className="w-[50%] text-sm text-gray-800">{item.route}</Text>
       <Text className="w-[20%] text-sm text-gray-800">{item.amount}</Text>
       <TouchableOpacity className="w-[20%] bg-[#93C5FD] rounded-full py-1.5 items-center">
@@ -39,11 +52,11 @@ export default function RecentHistoryTable() {
         <Text className="w-[40%] text-xs font-bold text-gray-600">Amount</Text>
       </View>
       <View>
-        {mockData.map((item, index) => (
-          <View key={index}>
-            {renderItem({ item })}
-          </View>
-        ))}
+        <FlatList
+          data={[{ delivery_id, route, amount, onPressView }]} // Replace with actual data array
+          renderItem={({ item }) => renderItem({ item })}
+          keyExtractor={(item) => item.delivery_id || item.route} // Use delivery_id or route as key
+        />
       </View>
     </View>
   );

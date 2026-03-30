@@ -47,14 +47,14 @@ export default function Login() {
 
   const { sendOTP, verifyOTP, user, token } = useAuthStore();
 
-  // ✅ Auto focus first OTP box
+  // Auto focus first OTP box
   useEffect(() => {
     if (step === "OTP") {
       setTimeout(() => inputs.current[0]?.focus(), 100);
     }
   }, [step]);
 
-  // ✅ Format Cambodian phone
+  // Format Cambodian phone
   const formatPhoneNumber = (phone: string) => {
     phone = phone.replace(/\s+/g, "").replace(/-/g, "");
 
@@ -82,7 +82,7 @@ export default function Login() {
     }
   };
 
-  // ✅ Send OTP
+  // Send OTP
   const handleSendOTP = async () => {
     if (!phone) {
       Alert.alert("Warning", "Please fill the phone number");
@@ -96,7 +96,7 @@ export default function Login() {
     else Alert.alert("Error", res.message);
   };
 
-  // ✅ Handle OTP change
+  // Handle OTP change
   const handleChange = (text: string, index: number) => {
     if (!/^[0-9]?$/.test(text)) return;
 
@@ -112,7 +112,7 @@ export default function Login() {
     setOtp(combined);
   };
 
-  // ✅ Verify OTP
+  // Verify OTP
   const handleVerifyOTP = async () => {
     if (otp.length !== OTP_LENGTH) {
       Alert.alert("Warning", "Please enter full OTP");

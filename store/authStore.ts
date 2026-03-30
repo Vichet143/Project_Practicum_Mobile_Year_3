@@ -215,3 +215,55 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
+
+export const getuserByUid = async (uid: string) => {
+
+  try {
+
+    const res = await fetch(`${API_URL}/users/${uid}`, {
+      method: "GET"
+    });
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      user: data.user,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
+export const getTransporterByid = async (transporter_id: string) => {
+  try {
+
+    const res = await fetch(`${API_URL}/transporters/${transporter_id}`, {
+      method: "GET",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch transporters");
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      transporters: data.transporters,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};

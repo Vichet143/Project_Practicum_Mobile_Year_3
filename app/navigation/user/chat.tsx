@@ -1,10 +1,11 @@
-import { Text, View } from 'react-native'
-import React from 'react'
+import ChatList from "../../screen/chatscreen";
+import React from "react";
+import { View } from "react-native";
 
 export default function chat() {
   return (
-    <View>
-      <Text>chat</Text>
+    <View style={{ flex: 1 }}>
+      <ChatList />
     </View>
-  )
+  );
 }

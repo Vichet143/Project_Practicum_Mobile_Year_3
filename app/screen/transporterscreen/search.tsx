@@ -124,15 +124,17 @@ export default function TransporterSearchScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
           renderItem={({ item }) => (
-            <JobCard
-              delivery_id={item.delivery_id}
-              from={item.from}
-              to={item.to}
-              weight={item.weight}
-              price={item.price}
-              isLoading={acceptingOrderId === item.delivery_id}
-              onAccept={() => handleAcceptOrder(item.delivery_id)}
-            />
+            <View style={{ flex: 1, maxWidth: '50%' }}>
+              <JobCard
+                delivery_id={item.delivery_id}
+                from={item.from}
+                to={item.to}
+                weight={item.weight}
+                price={item.price}
+                isLoading={acceptingOrderId === item.delivery_id}
+                onAccept={() => handleAcceptOrder(item.delivery_id)}
+              />
+            </View>
           )}
         />
       )}

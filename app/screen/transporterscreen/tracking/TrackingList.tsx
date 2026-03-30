@@ -1,39 +1,35 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { ChevronLeftIcon, EllipsisHorizontalIcon } from "react-native-heroicons/solid";
 import TrackingListItem from "../../../../components/transporter/TrackingListItem";
-
+import { useDeliveryStore } from "../../../../store/createDelivery";
 // Define tab types
 type TabType = 'processing' | 'completed';
-
-interface OrderItem {
-  id: string;
-  location: string;
-  price: string;
-  status: 'pending' | 'completed';
-}
 
 export default function TrackingScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('processing');
 
-  const processingData: OrderItem[] = [
-    { id: '1', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '2', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '3', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '4', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '5', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '6', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '7', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '8', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '9', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '10', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '11', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-    { id: '12', location: 'Boeung Kak, Phnom Penh', price: '10$', status: 'pending' },
-  ];
+  const { 
+    activeJobs, 
+    completedJobs,  
+    getTransporterActiveJobs, 
+    getTransporterHistory,
+    loading
+  } = useDeliveryStore();
 
-  const completedData: OrderItem[] = [
-    { id: '5', location: 'Toul Kork, Phnom Penh', price: '15$', status: 'completed' },
-  ];
+  useEffect(() => {
+      refreshData();
+    }, [activeTab]);
+
+  const refreshData = () => {
+    if (activeTab === 'processing') {
+      getTransporterActiveJobs();
+    } else {
+      getTransporterHistory();
+    }
+  };
+
+  const currentData = activeTab === 'processing' ? activeJobs : completedJobs;
 
   return (
     <View className="flex-1 bg-[#F5F5F5]">
@@ -69,18 +65,27 @@ export default function TrackingScreen() {
 
       {/* --- The List --- */}
       <View className="flex-1 px-6 mt-6">
-        <FlatList<OrderItem>
-          data={activeTab === 'processing' ? processingData : completedData}
-          keyExtractor={(item) => item.id}
+        <FlatList
+          data={currentData}
+          keyExtractor={(item) => item.delivery_id}
           showsVerticalScrollIndicator={false}
           scrollEnabled={true}
           contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+          refreshControl={
+              <RefreshControl refreshing={loading} onRefresh={refreshData} colors={['#FF6B52']} />
+            }
+            // Displays a message if the list is empty
+            ListEmptyComponent={
+              <View className="flex-1 justify-center items-center mt-20">
+                <Text className="text-lg text-gray-400">No {activeTab} orders found</Text>
+              </View>
+            }
           renderItem={({ item }) => (
             <TrackingListItem 
-              location={item.location} 
-              price={item.price} 
+              location={item.dropoff?.address || "No Address"}
+              price={`${item.price}$`}
               status={item.status}
-              onPressView={() => console.log(`Viewing ${item.id}`)}
+              onPressView={() => console.log(`Viewing ${item.delivery_id}`)}
             />
           )}
         />

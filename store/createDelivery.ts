@@ -60,6 +60,10 @@ interface DeliveryStore {
   acceptDelivery: (delivery_id: string) => Promise<boolean>;
   getTransporterActiveJobs: () => Promise<void>;
   getTransporterHistory: () => Promise<void>;
+  updateTransporterStatus: (
+    delivery_id: string,
+    status: string
+  ) => Promise<boolean>;
 }
 
 const getToken = async () => {
@@ -225,7 +229,7 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
       });
 
       const data = await res.json();
-      console.log("🔥 BACKEND RESPONSE:", data); // Look at your terminal!
+      // console.log("🔥 BACKEND RESPONSE:", data); // Look at your terminal!
 
       if (!res.ok) throw new Error(data.message);
 
@@ -301,6 +305,41 @@ export const useDeliveryStore = create<DeliveryStore>((set) => ({
       });
       const data = await res.json();
       set({ completedJobs: data.deliveries || [] });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // --- Dedicated Transporter Status Update ---
+  updateTransporterStatus: async (delivery_id, status) => {
+    set({ loading: true, error: null });
+    try {
+      const token = await getToken();
+      
+      // We use a specific endpoint for transporters to avoid 403 Forbidden errors
+      // from the user-check logic.
+      const res = await fetch(`${API_URL}/deliveries/${delivery_id}/transporter-status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      console.log("Fetch result:", res);
+      const data = await res.json();
+      
+      if (!res.ok) {
+        // This will now catch "You are not the assigned transporter" from your backend
+        throw new Error(data.message || "Failed to update driver status");
+      }
+
+      return true;
+    } catch (err: any) {
+      console.error("Driver Status Error:", err.message);
+      set({ error: err.message });
+      return false;
     } finally {
       set({ loading: false });
     }

@@ -72,6 +72,7 @@ export default function TransporterDashboard() {
         renderItem={({ item }) => (
           <View className="px-4">
             <RecentHistoryTable 
+              delivery_id={item.delivery_id}
               route={item.dropoff?.address || "Unknown"} 
               amount={`${item.price}$`} 
             />

@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/store/authStore";
 import { useDeliveryStore } from "@/store/createDelivery";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -5,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
+  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -16,6 +18,7 @@ const { width, height } = Dimensions.get("window");
 
 export default function Viewdetail() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const params = useLocalSearchParams();
   const deliveryId = params.id as string;
   const { getDeliveryById, cancelDelivery, loading } = useDeliveryStore();
@@ -27,7 +30,10 @@ export default function Viewdetail() {
     // Create a timer to fetch updates every 5 seconds while the user is on this screen
     const interval = setInterval(() => {
       // Only poll if the order isn't finished yet
-      if (delivery?.status !== 'delivered' && delivery?.status !== 'completed') {
+      if (
+        delivery?.status !== "delivered" &&
+        delivery?.status !== "completed"
+      ) {
         loadDeliveryDetails();
       }
     }, 5000);
@@ -150,7 +156,9 @@ export default function Viewdetail() {
                 className="w-12 h-12 rounded-full"
               />
               <View className="ml-3 flex-1">
-                <Text className="text-base font-semibold">{delivery.transporterName}</Text>
+                <Text className="text-base font-semibold">
+                  {delivery.transporterName}
+                </Text>
                 <View className="flex-row items-center">
                   <Ionicons name="star" size={14} color="#FFD700" />
                   <Text className="text-xs text-gray-600 ml-1">
@@ -160,10 +168,31 @@ export default function Viewdetail() {
               </View>
             </View>
             <View className="flex-row gap-3">
-              <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+              <TouchableOpacity
+                className="bg-gray-100 rounded-full p-2"
+                onPress={() => {
+                  const userId = delivery.userId || user?.id;
+                  if (!userId || !delivery.transporterId) return;
+
+                  router.push({
+                    pathname: "/screen/chatscreen/massage",
+                    params: {
+                      user_id: userId,
+                      transporter_id: delivery.transporterId,
+                      name: delivery.transporterName || "Transporter",
+                      isTransporter: "false",
+                    },
+                  });
+                }}
+              >
                 <Ionicons name="chatbubble-outline" size={20} color="black" />
               </TouchableOpacity>
-              <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+              <TouchableOpacity
+                className="bg-gray-100 rounded-full p-2"
+                onPress={() =>
+                  Linking.openURL(`tel:${delivery.transporterPhone}`)
+                }
+              >
                 <Ionicons name="call-outline" size={20} color="black" />
               </TouchableOpacity>
             </View>
@@ -276,7 +305,7 @@ export default function Viewdetail() {
         </View>
 
         {/* Cancel Order Button */}
-        {currentStep < 3 && (
+        {currentStep < 1 && (
           <TouchableOpacity
             className="mx-4 mt-6 mb-8 bg-white rounded-lg py-3 shadow-lg border border-gray-100"
             onPress={handleCancelOrder}

@@ -7,8 +7,17 @@ export default function ScreenLayout() {
       screenOptions={{
         headerShown: true,
         headerStyle: { backgroundColor: "#FF6347" },
-        headerTintColor: "#fff",
+        headerTitleStyle: { color: "#FFFFFF" },
+        headerTintColor: "#FFFFFFFF",
       }}
-    />
+    >
+      <Stack.Screen
+        name="chatscreen"
+        options={{
+          title: "",
+          headerTintColor: "#FF6347",
+        }}
+      />
+    </Stack>
   );
 }

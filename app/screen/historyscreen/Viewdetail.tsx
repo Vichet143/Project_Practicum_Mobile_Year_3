@@ -23,7 +23,18 @@ export default function Viewdetail() {
 
   useEffect(() => {
     loadDeliveryDetails();
-  }, [deliveryId]);
+
+    // Create a timer to fetch updates every 5 seconds while the user is on this screen
+    const interval = setInterval(() => {
+      // Only poll if the order isn't finished yet
+      if (delivery?.status !== 'delivered' && delivery?.status !== 'completed') {
+        loadDeliveryDetails();
+      }
+    }, 5000);
+
+    // Clean up the timer when the user leaves the screen to save battery/data
+    return () => clearInterval(interval);
+  }, [deliveryId, delivery?.status]);
 
   const loadDeliveryDetails = async () => {
     if (deliveryId) {
@@ -52,11 +63,12 @@ export default function Viewdetail() {
   const getStatusStep = (status: string) => {
     const statusMap: Record<string, number> = {
       pending: 0,
-      "picked up": 1,
-      "in transit": 2,
+      accepted: 0,
+      picked_up: 1,
+      in_transit: 2,
       delivered: 3,
     };
-    return statusMap[status.toLowerCase()] || 0;
+    return statusMap[status.toLowerCase().replace(" ", "_")] || 0;
   };
 
   const currentStep = getStatusStep(delivery.status);
@@ -138,7 +150,7 @@ export default function Viewdetail() {
                 className="w-12 h-12 rounded-full"
               />
               <View className="ml-3 flex-1">
-                <Text className="text-base font-semibold">David Wayne</Text>
+                <Text className="text-base font-semibold">{delivery.transporterName}</Text>
                 <View className="flex-row items-center">
                   <Ionicons name="star" size={14} color="#FFD700" />
                   <Text className="text-xs text-gray-600 ml-1">
@@ -174,7 +186,7 @@ export default function Viewdetail() {
                   currentStep >= 0 ? "bg-[#FF6347]" : "bg-gray-300"
                 }`}
               >
-                <MaterialIcons name="shopping-bag" size={20} color="white" />
+                <MaterialIcons name="shopping-cart" size={20} color="white" />
               </View>
             </View>
 
@@ -189,7 +201,7 @@ export default function Viewdetail() {
                   currentStep >= 1 ? "bg-[#FF6347]" : "bg-gray-300"
                 }`}
               >
-                <MaterialIcons name="check-box" size={20} color="white" />
+                <MaterialIcons name="local-shipping" size={20} color="white" />
               </View>
             </View>
 

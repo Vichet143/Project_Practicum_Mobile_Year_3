@@ -22,7 +22,6 @@ interface ContentItem {
   title: string;
   total: number;
   status: Status;
-  paymentStatus?: string;
 }
 
 const STATUS_OPTIONS: (Status | "All")[] = [
@@ -35,7 +34,7 @@ const STATUS_OPTIONS: (Status | "All")[] = [
 ];
 
 // Helper function to normalize status from API
-const normalizeStatus = (apiStatus: string): Status => {
+const normalizeStatus = (status: string): Status => {
   const statusMap: Record<string, Status> = {
     pending: "Pending",
     picked_up: "Picked up",
@@ -43,7 +42,7 @@ const normalizeStatus = (apiStatus: string): Status => {
     delivered: "Delivered",
     cancelled: "Cancelled",
   };
-  return statusMap[apiStatus.toLowerCase()] || "Pending";
+  return statusMap[status.toLowerCase()] || "Pending";
 };
 
 export default function History() {
@@ -54,7 +53,7 @@ export default function History() {
   // Fetch delivery history on mount
   useEffect(() => {
     getDeliveryHistory();
-  }, []);
+  }, [getDeliveryHistory]);
 
   // Map deliveries from store to ContentItem format
   const mappedDeliveries = useMemo(() => {
@@ -63,7 +62,6 @@ export default function History() {
       title: delivery.packageName,
       total: delivery.price,
       status: normalizeStatus(delivery.status),
-      paymentStatus: delivery.paymentStatus,
     }));
   }, [deliveries]);
 
@@ -131,7 +129,7 @@ export default function History() {
         </View>
       </View>
 
-      <View className="flex-1 mt-[1rem]">
+      <View className="flex-1 mt-[1rem] mb-[5rem]">
         {/* Order Lists */}
         <FlatList
           data={filteredData}
@@ -157,10 +155,6 @@ export default function History() {
             </View>
           }
           renderItem={({ item }) => {
-            if ((item.paymentStatus || "").toLowerCase() === "unpaid") {
-              return null;
-            }
-
             return (
               <View className="w-full h-[5rem] mt-[1rem] px-[1rem] flex-row justify-between items-center bg-white border border-gray-400 rounded-lg">
                 <View className="flex-col">
@@ -170,15 +164,27 @@ export default function History() {
                       Total: ${item.total.toFixed(2)}
                     </Text>
                     <View
-                      className={`px-2 py-1 rounded-full ${item.status === "Delivered" ? "bg-green-200" : item.status === "In Transit" ? "bg-yellow-200" : "bg-red-200"}`}
+                      className={`px-2 py-1 rounded-full ${item.status === "Delivered" 
+                        ? "bg-green-200" 
+                        : item.status === "Pending" 
+                        ? "bg-orange-200" 
+                        : item.status === "Picked up" 
+                        ? "bg-purple-200" 
+                        : item.status === "In Transit" 
+                        ? "bg-blue-200" 
+                        : "bg-red-200"}`}
                     >
                       <Text
                         className={`text-xs font-medium ${
                           item.status === "Delivered"
                             ? "text-green-800"
+                            : item.status === "Pending"
+                            ? "text-orange-800"
+                            : item.status === "Picked up"
+                            ? "text-purple-800"
                             : item.status === "In Transit"
-                              ? "text-yellow-800"
-                              : "text-red-800"
+                            ? "text-blue-800"
+                            : "text-red-800"
                         }`}
                       >
                         {item.status}

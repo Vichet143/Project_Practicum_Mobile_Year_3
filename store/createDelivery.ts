@@ -25,6 +25,7 @@ interface Delivery {
   updatedAt: any;
   paymentStatus: string;
   transporterId?: string;
+  transporterName?: string;
 }
 
 interface CreateDeliveryPayload {

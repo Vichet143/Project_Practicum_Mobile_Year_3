@@ -145,6 +145,30 @@ export default function TrackingDetail() {
           </TouchableOpacity>
         </View>
 
+        {/* Driver Info Card */}
+        <View className="mx-4 mt-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-200 flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <Image
+              source={{
+                uri: "https://ui-avatars.com/api/?name=Driver&size=128",
+              }}
+              className="w-12 h-12 rounded-full"
+            />
+            <View className="ml-3 flex-1">
+              <Text className="text-base font-semibold">{delivery.recipientName}</Text>
+              <Text className="text-sm text-gray-500">Your Customer</Text>
+            </View>
+          </View>
+          <View className="flex-row gap-3">
+            <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+              <Ionicons name="chatbubble-outline" size={20} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+              <Ionicons name="call-outline" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Progress Tracker */}
         <View className="mx-4 mt-6 p-4 bg-white rounded-2xl shadow-sm">
           <Text className="text-base font-bold text-gray-800 mb-4">Delivery Progress</Text>

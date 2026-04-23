@@ -13,7 +13,16 @@ import {
 const normalizeStatus = (status: string) =>
   status.toLowerCase().replace(/\s+/g, "_");
 
-export default function Tracking() {
+interface StatusConfig {
+  delivery_id?: string;
+  packageName: string;
+  status: string;
+  recipientName: string;
+  onPressView: () => void;
+}
+
+export default function Tracking({} : StatusConfig) {
+
   const router = useRouter();
   const { deliveries, getDeliveryHistory, loading } = useDeliveryStore();
 
@@ -26,6 +35,24 @@ export default function Tracking() {
       (delivery) => normalizeStatus(delivery.status) !== "delivered",
     );
   }, [deliveries]);
+
+  const statusState = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'accepted':
+        return { label: 'Accepted', color: 'text-blue-800', backgroundColor: 'bg-blue-200' };
+      case 'picked_up':
+        return { label: 'Picked Up', color: 'text-purple-800', backgroundColor: 'bg-purple-200' };
+      case 'in_transit':
+        return { label: 'In Transit', color: 'text-blue-800', backgroundColor: 'bg-blue-200' };
+      case 'delivered':
+      case 'completed':
+        return { label: 'Completed', color: 'text-green-800', backgroundColor: 'bg-green-200' };
+      case 'pending':
+        return { label: 'Pending', color: 'text-orange-800', backgroundColor: 'bg-orange-200' };
+      default:
+        return { label: status, color: 'text-gray-800', backgroundColor: 'bg-gray-200' };
+    }
+  };
 
   return (
     <View className="w-full h-full px-4 pt-4">
@@ -58,11 +85,18 @@ export default function Tracking() {
                 <Text className="text-base font-semibold text-gray-900">
                   {item.packageName}
                 </Text>
-                <Text className="text-sm text-gray-500 mt-1">
-                  Status: {item.status}
-                </Text>
+                <View className="flex-row items-center gap-4">
+                  <Text className="text-sm text-gray-500">
+                    Total: {item.price}$
+                  </Text>
+                  <View className={`px-2 py-1 ${statusState(item.status).color} ${statusState(item.status).backgroundColor} rounded-full`}>
+                    <Text className={`text-sm ${statusState(item.status).color}`}>
+                      {statusState(item.status).label}
+                    </Text>
+                  </View>
+                </View>
                 <Text className="text-sm text-gray-500">
-                  To: {item.recipientName}
+                  Recipient: {item.recipientName}
                 </Text>
               </View>
 

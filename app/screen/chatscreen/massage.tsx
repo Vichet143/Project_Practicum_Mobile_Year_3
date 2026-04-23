@@ -1,19 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaViewBase } from "react-native";
 import React, { useEffect, useState } from "react";
 import {
-    FlatList,
-    SafeAreaView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAuthStore } from "../../../store/authStore";
 import {
-    convertFirestoreTimestamp,
-    useChatStore,
+  convertFirestoreTimestamp,
+  useChatStore,
 } from "../../../store/chatStore";
 
 interface Message {
@@ -24,6 +22,46 @@ interface Message {
   timeMs?: number;
   isPending?: boolean;
 }
+
+interface TimeSeparatorItem {
+  id: string;
+  type: "separator";
+  label: string;
+}
+
+interface ChatMessageItem extends Message {
+  itemType: "message";
+}
+
+type ChatListItem = TimeSeparatorItem | ChatMessageItem;
+
+const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
+
+const formatMessageDateTime = (date: Date) => {
+  const formattedDate = date.toLocaleDateString([], {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const formattedTime = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${formattedTime} ${formattedDate}`;
+};
+
+const formatSeparatorLabel = (date: Date) => {
+  const weekday = date
+    .toLocaleDateString([], { weekday: "short" })
+    .toUpperCase();
+  const time = date.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  return `${weekday} ${time}`;
+};
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -67,10 +105,7 @@ export default function ChatScreen() {
         type: (chat.sender_type === currentUserRole ? "sent" : "received") as
           | "sent"
           | "received",
-        time: dateObject.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: formatMessageDateTime(dateObject),
         timeMs: dateObject.getTime(),
       };
     })
@@ -79,6 +114,30 @@ export default function ChatScreen() {
   const mergedMessages = [...messages, ...localMessages].sort(
     (a, b) => (a.timeMs ?? 0) - (b.timeMs ?? 0),
   );
+
+  const chatListItems: ChatListItem[] = mergedMessages.flatMap((msg, index) => {
+    const currentTime = msg.timeMs ?? 0;
+    const previousTime = mergedMessages[index - 1]?.timeMs ?? 0;
+    const shouldShowSeparator =
+      index === 0 || currentTime - previousTime >= FIFTEEN_MINUTES_IN_MS;
+
+    const items: ChatListItem[] = [];
+
+    if (shouldShowSeparator) {
+      items.push({
+        id: `sep-${msg.id}`,
+        type: "separator",
+        label: formatSeparatorLabel(new Date(currentTime)),
+      });
+    }
+
+    items.push({
+      ...msg,
+      itemType: "message",
+    });
+
+    return items;
+  });
 
   useEffect(() => {
     if (isTransporter && transporter_id && user?.id === transporter_id) {
@@ -106,7 +165,7 @@ export default function ChatScreen() {
       id: pendingId,
       text,
       type: "sent",
-      time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: formatMessageDateTime(now),
       timeMs: now.getTime(),
       isPending: true,
     };
@@ -134,8 +193,8 @@ export default function ChatScreen() {
   };
 
   return (
-    < View className="flex-1 bg-[#F1F5F9]">
-      <View className="flex-row items-center justify-between bg-white px-4 py-3 border-b border-[#E2E8F0] shadow-sm">
+    <View className="flex-1 bg-[#F1F5F9]">
+      <View className="flex-row items-center bg-white px-4 py-3 border-b border-[#E2E8F0] shadow-sm">
         <TouchableOpacity
           onPress={() => router.back()}
           className="p-1 rounded-full bg-white"
@@ -150,8 +209,6 @@ export default function ChatScreen() {
             <Text className="text-xs text-[#94A3B8]">Online</Text>
           </View>
         </View>
-
-        <Ionicons name="ellipsis-vertical" size={22} color="#334155" />
       </View>
 
       {loading ? (
@@ -184,31 +241,34 @@ export default function ChatScreen() {
       )}
 
       <FlatList
-        data={mergedMessages}
+        data={chatListItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 12 }}
-        renderItem={({ item }) => (
-          <View
-            className={`max-w-[80%] mb-2 p-3 rounded-2xl shadow-sm ${
-              item.type === "sent"
-                ? "self-end bg-[#14B8A6]"
-                : "self-start bg-white"
-            }`}
-          >
-            <Text
-              className={item.type === "sent" ? "text-white" : "text-[#0F172A]"}
-            >
-              {item.text}
-            </Text>
-            <Text
-              className={`text-[10px] mt-1 ${
-                item.type === "sent" ? "text-[#D1FAE5]" : "text-[#94A3B8]"
+        renderItem={({ item }) =>
+          item.type === "separator" ? (
+            <View className="items-center my-3">
+              <Text className="text-[11px] text-[#64748B] font-medium">
+                {item.label}
+              </Text>
+            </View>
+          ) : (
+            <View
+              className={`max-w-[80%] mb-2 p-3 rounded-2xl shadow-sm ${
+                item.type === "sent"
+                  ? "self-end bg-[#14B8A6]"
+                  : "self-start bg-white"
               }`}
             >
-              {item.time}
-            </Text>
-          </View>
-        )}
+              <Text
+                className={
+                  item.type === "sent" ? "text-white" : "text-[#0F172A]"
+                }
+              >
+                {item.text}
+              </Text>
+            </View>
+          )
+        }
       />
 
       <View className="flex-row items-center px-3 py-2 bg-white border-t border-[#E2E8F0]">

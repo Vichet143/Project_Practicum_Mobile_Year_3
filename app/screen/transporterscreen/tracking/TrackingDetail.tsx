@@ -1,4 +1,6 @@
 import { useDeliveryStore } from "@/store/createDelivery";
+import { useAuthStore } from "@/store/authStore";
+import { useChatStore } from "@/store/chatStore";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -11,6 +13,7 @@ import {
   View,
   Alert,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 
@@ -18,6 +21,8 @@ const { width, height } = Dimensions.get("window");
 
 export default function TrackingDetail() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { chats } = useChatStore();
   const params = useLocalSearchParams();
   const deliveryId = params.id as string;
   const { getDeliveryById, updateTransporterStatus, loading } = useDeliveryStore();
@@ -160,10 +165,39 @@ export default function TrackingDetail() {
             </View>
           </View>
           <View className="flex-row gap-3">
-            <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+            <TouchableOpacity 
+              className="bg-gray-100 rounded-full p-2"
+              onPress={() => {
+                const customerId = delivery.userId || user?.id; 
+                if (!customerId || !user?.id) return;
+
+                const existingChat = chats.find(
+                  chat => chat.user_id === customerId && chat.transporter_id === user.id
+                );
+
+                const customerName = existingChat?.user?.fullname || 
+                                    existingChat?.user?.name ||
+                                    delivery.recipientName || 
+                                    "Customer";
+
+                router.push({
+                  pathname: "/screen/chatscreen/massage",
+                  params: {
+                    user_id: customerId,
+                    transporter_id: user.id,
+                    name: customerName,
+                    isUser: "false",
+                  },
+                });
+              }}
+            >
               <Ionicons name="chatbubble-outline" size={20} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity className="bg-gray-100 rounded-full p-2">
+            <TouchableOpacity 
+              className="bg-gray-100 rounded-full p-2"
+              onPress={() => 
+                Linking.openURL(`tel:${delivery.recipientPhone}`)
+              }>
               <Ionicons name="call-outline" size={20} color="black" />
             </TouchableOpacity>
           </View>

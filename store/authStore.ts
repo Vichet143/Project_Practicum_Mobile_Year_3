@@ -19,7 +19,20 @@ interface User {
   phone_number: string;
   photoURL: string;
   role?: string;
+  roles?: string;
+  password?: string;
 }
+
+const normalizeUser = (user: any): User => {
+  if (!user) return user;
+
+  const normalizedRole = user.role || user.roles;
+  return {
+    ...user,
+    role: normalizedRole,
+    roles: user.roles || normalizedRole,
+  };
+};
 
 interface AuthState {
   user: User | null;
@@ -155,7 +168,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           set({
-            user: data.user,
+            user: normalizeUser(data.user),
             token: firebaseToken,
             isLoading: false,
           });
@@ -217,11 +230,9 @@ export const useAuthStore = create<AuthState>()(
 );
 
 export const getuserByUid = async (uid: string) => {
-
   try {
-
     const res = await fetch(`${API_URL}/users/${uid}`, {
-      method: "GET"
+      method: "GET",
     });
 
     if (!res.ok) {
@@ -234,7 +245,7 @@ export const getuserByUid = async (uid: string) => {
     const data = await res.json();
     return {
       success: true,
-      user: data.user,
+      user: normalizeUser(data.user),
     };
   } catch (error: any) {
     return {
@@ -246,7 +257,6 @@ export const getuserByUid = async (uid: string) => {
 
 export const getTransporterByid = async (transporter_id: string) => {
   try {
-
     const res = await fetch(`${API_URL}/transporters/${transporter_id}`, {
       method: "GET",
     });
@@ -259,6 +269,56 @@ export const getTransporterByid = async (transporter_id: string) => {
     return {
       success: true,
       transporters: data.transporters,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
+export const updateUserProfile = async (
+  uid: string,
+  fullname: string,
+  email: string,
+  password: string,
+  photoURL: string,
+  phone_number: string,
+  roles: string,
+) => {
+  try {
+    console.log(`${API_URL}/auth/updateprofile/${uid}`);
+    const res = await fetch(`${API_URL}/auth/updateprofile/${uid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullname,
+        phone_number,
+        photoURL,
+        email,
+        password,
+        roles,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      let parsed: any = null;
+      try {
+        parsed = text ? JSON.parse(text) : null;
+      } catch (e) {
+        parsed = null;
+      }
+      throw new Error(
+        parsed?.message || parsed?.error || text || "Failed to update profile",
+      );
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      user: normalizeUser(data.user),
     };
   } catch (error: any) {
     return {

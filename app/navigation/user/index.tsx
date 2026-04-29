@@ -32,7 +32,7 @@ export default function Index() {
         <View>
           <View className="">
             <Image
-              source={require("../../../assets/images/headertop/profile.jpg")}
+              source={{ uri: user?.photoURL }}
               className="w-[4.5rem] h-[4.5rem] rounded-full border-[#FF6347] border-2"
               resizeMode="cover"
             />

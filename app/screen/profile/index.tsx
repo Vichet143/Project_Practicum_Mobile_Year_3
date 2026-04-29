@@ -9,6 +9,9 @@ export default function Profile() {
   const router = useRouter();
   const displayName =
     user?.fullname || "No name";
+  
+  console.log("User ID:", user?.id);
+  
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -52,7 +55,7 @@ export default function Profile() {
         <MenuItem
           icon="person-outline"
           label="Edit Profile"
-          onPress={() => router.push("/screen/profile/edit-profile" as any)}
+          onPress={() => router.push(`/screen/profile/edit-profile?uid=${user?.id}` as any)}
         />
         <MenuItem
           icon="notifications-outline"

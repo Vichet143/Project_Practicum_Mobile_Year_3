@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -29,17 +29,25 @@ export default function TrackingScreen() {
     loading,
   } = useDeliveryStore();
 
-  useEffect(() => {
-    refreshData();
-  }, [activeTab]);
-
-  const refreshData = () => {
+  // Define the refresh function with useCallback to prevent infinite loops
+  const refreshData = useCallback(() => {
     if (activeTab === "processing") {
       getTransporterActiveJobs();
     } else {
       getTransporterHistory();
     }
-  };
+  }, [activeTab, getTransporterActiveJobs, getTransporterHistory]);
+
+  // This triggers whenever the user navigates TO this screen
+  useFocusEffect(
+    useCallback(() => {
+      refreshData();
+    }, [refreshData])
+  );
+
+  useEffect(() => {
+    refreshData();
+  }, [activeTab, refreshData]);
 
   const currentData = activeTab === "processing" ? activeJobs : completedJobs;
 

@@ -6,8 +6,7 @@ import { Animated, Image, Pressable, Text, View } from "react-native";
 
 export default function Index() {
   const { user } = useAuthStore();
-  const displayName =
-    user?.fullname || "No name";
+  const displayName = user?.fullname || "No name";
   const scale1 = useRef(new Animated.Value(1)).current;
   const scale2 = useRef(new Animated.Value(1)).current;
 
@@ -26,6 +25,8 @@ export default function Index() {
     }).start();
   };
 
+  console.log("User data:", user);
+
   return (
     <View style={{ flex: 1 }}>
       <View className="px-[1rem] pt-[2rem] flex-row">
@@ -33,8 +34,13 @@ export default function Index() {
           <View className="">
             <Image
               source={{ uri: user?.photoURL }}
-              className="w-[4.5rem] h-[4.5rem] rounded-full border-[#FF6347] border-2"
-              resizeMode="cover"
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 36,
+                borderWidth: 2,
+                borderColor: "#FF6347",
+              }}
             />
           </View>
         </View>
